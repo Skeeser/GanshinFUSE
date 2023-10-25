@@ -1,5 +1,7 @@
 <div align="center">
 
+<img alt="LOGO" src="assets/sys.jpg" width="256" height="346" />
+
 # GanshinFUSE
 
 <br>
