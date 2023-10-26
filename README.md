@@ -34,7 +34,8 @@ OS File System Based on FUSE.
 <br>
 
 ## 功能特性
-- 开创性用了shell脚本安装依赖, 一行命令轻松构建
+- 开创性用了shell脚本安装依赖, 一行命令轻松安装依赖
+- 用cmake生成makefile构建, 简单高效, 跨平台性强
 - 利用 FUSE 框架创建一个 SFS 文件系统，这个文件系统采用 inode 方式管理文件系统
 - 类似于 UFS, 空闲块和空闲 inode 均采用位图的方式管理，文件数据块采用直接和间接索引的方式，支持多级目录。
 - 为了方便实现，文件名格式为 8.3，即文件名为 8 个字节，扩展名为 3 个字节。之后想办法实现长文件名。
@@ -85,6 +86,7 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 #### 编译
 
 ```shell
+cd ~/GanshinFUSE/
 mkdir build
 cd build
 cmake ..
