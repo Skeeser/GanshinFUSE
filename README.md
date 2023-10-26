@@ -34,7 +34,7 @@ OS File System Based on FUSE.
 <br>
 
 ## 功能特性
-
+- 开创性用了shell脚本安装依赖, 一行命令轻松构建
 - 利用 FUSE 框架创建一个 SFS 文件系统，这个文件系统采用 inode 方式管理文件系统
 - 类似于 UFS, 空闲块和空闲 inode 均采用位图的方式管理，文件数据块采用直接和间接索引的方式，支持多级目录。
 - 为了方便实现，文件名格式为 8.3，即文件名为 8 个字节，扩展名为 3 个字节。之后想办法实现长文件名。
@@ -65,11 +65,23 @@ Linux
 
 - cmake
 - gcc
-- fuselib
+- libfuse
 
 <br>
 
 ### 构建
+#### 下载本项目
+```shell
+cd ~
+git clone https://github.com/Skeeser/GanshinFUSE.git
+```
+
+#### 脚本一行构建
+```shell
+sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
+```
+
+<br>
 
 #### 编译
 
@@ -84,13 +96,19 @@ make
 
 ### 运行
 
-<!-- 描述如何运行该项目 -->
+
 <br>
 
 ## 使用指南
+- 注意依赖有没有装上
 
-<!-- 描述如何使用该项目 -->
 <br>
+
+## 如何贡献
+如果你见到了这个项目并且想要完善它  
+强烈建议阅读下面文档  
+- [如何用github参与开源项目](doc/github参与开源项目流程.md)
+- [开发文档](doc/develop_log.md)
 
 ## 关于作者
 

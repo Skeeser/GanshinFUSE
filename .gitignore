@@ -10,5 +10,12 @@ resource/
 *.sln
 *.sw?
 
+# complie file
+build/
+
+# libfuse
+lib/
+
+
 # other's code
 MFS/
