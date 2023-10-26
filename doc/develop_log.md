@@ -5,7 +5,7 @@
 ## 开发计划(ToDos)
 - [x] 了解fuse怎么使用  
 - [x] 运行hello world例子
-- [ ] 尝试读懂hello.c的源码
+- [x] 尝试读懂hello.c的源码
 - [ ] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
 
 
