@@ -62,7 +62,6 @@ Linux
 ## 快速开始
 
 ### 依赖检查
-
 - cmake
 - gcc
 - libfuse
