@@ -1,0 +1,14 @@
+# resource
+resource/
+
+# Editor
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# other's code
+MFS/
