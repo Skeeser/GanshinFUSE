@@ -50,7 +50,9 @@ OS File System Based on FUSE.
 - src => 源代码
 - assets => 资源文件
 - build => 编译文件
+- example => 存放示例文件
 - CMakeLists.txt => CMake 配置文件
+- build.sh => 构建脚本
 
 <br>
 

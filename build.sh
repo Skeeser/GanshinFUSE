@@ -16,23 +16,23 @@ fi
 
 if [ $? -eq 0 ]; then
     echo "<----------------start build---------------->"
-    cd libfuse && mkdir build && cd build && meson .. && ninja && sudo ninja install
+    cd libfuse && mkdir build && cd build && meson .. && ninja && sudo ninja install && sudo ldconfig
 else
     echo -e "\e[31m<----------------clone repositories false---------------->\e[0m"
     exit
 fi
 
 
-# 将编译出的libfuse复制到本项目
-if [ $? -eq 0 ]; then
-    echo "<----------------copy libfuse to GanshinFUSE---------------->"
-    cp -r ./lib ~/GanshinFUSE
-else
-    echo -e "\e[31m<----------------build false---------------->\e[0m"
-    exit
-fi
+# # 将编译出的libfuse复制到本项目
+# if [ $? -eq 0 ]; then
+#     echo "<----------------copy libfuse to GanshinFUSE---------------->"
+#     cp -r ./lib ~/GanshinFUSE
+# else
+#     echo -e "\e[31m<----------------build false---------------->\e[0m"
+#     exit
+# fi
 
 if [ $? -ne 0 ]; then
-    echo -e "\e[31m<----------------copy libfuse false---------------->\e[0m"
+    echo -e "\e[31m<----------------build false---------------->\e[0m"
     exit
 fi

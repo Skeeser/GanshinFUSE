@@ -11,8 +11,8 @@
  * minimal example filesystem using high-level API
  *
  * Compile with:
- *
- *     gcc -Wall hello.c `pkg-config fuse3 --cflags --libs` -o hello
+ *		gcc -Wall hello.c `pkg-config fuse3 --cflags --libs` -o hello
+ *     gcc -Wall hello.c -lfuse3 -lpthread -o hello
  *
  * ## Source code ##
  * \include hello.c
@@ -21,7 +21,7 @@
 
 #define FUSE_USE_VERSION 31
 
-#include <fuse.h>
+#include <fuse3/fuse.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
