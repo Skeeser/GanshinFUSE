@@ -54,6 +54,10 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 <br>
 
 ### 将文件系统的相关信息写入超级块；
+
+
+<br>
+
 ### 根目录作为文件系统中的第一个文件，需要做的事情：
 #### inode位图的第一个字节的第一位置为1，表示第一个inode已分配；
 #### 将根目录的相关信息填写到inode区的第一个inode。

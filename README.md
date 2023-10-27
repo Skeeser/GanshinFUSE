@@ -1,6 +1,6 @@
 <div align="center">
 
-<img alt="LOGO" src="assets/sys.jpg" width="256" height="346" />
+<img alt="LOGO" src="assets/logo.jpg" width="454" height="136" />
 
 # GanshinFUSE
 
