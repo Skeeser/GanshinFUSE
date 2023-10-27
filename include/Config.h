@@ -2,6 +2,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define FUSE_USE_VERSION 31
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,10 +14,8 @@
 #include <fuse3/fuse.h>
 
 
-
 // 用作文件系统的磁盘文件
 const char *const DISK_PATH = "../out/diskimg";
-
 
 
 // 超级块结构体

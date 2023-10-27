@@ -6,7 +6,7 @@
 - [x] 了解fuse怎么使用  
 - [x] 运行hello world例子
 - [x] 尝试读懂hello.c的源码
-- [ ] 写CMakeList.txt
+- [x] 写CMakeList.txt
 - [ ] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
 
 
