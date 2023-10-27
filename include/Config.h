@@ -16,6 +16,23 @@
 
 // 用作文件系统的磁盘文件
 const char *const DISK_PATH = "../out/diskimg";
+// 一些文件系统的设置, 不用#define是因为define的名称编译器看不见
+const int FS_BLOCK_SIZE = 512;  // Byte
+const int SUPER_BLOCK = 1;  // Block
+const int INODE_BITMAP = 1;  // Block
+const int DATA_BITMAP = 4;  // Block
+const int BITMAP_BLOCK = 512;  // Block
+const int INODE_SIZE = 64;  // Byte
+const int MAX_FILE = FS_BLOCK_SIZE * BITMAP_BLOCK / INODE_SIZE;
+
+#define ROOT_DIR_BLOCK 1
+#define MAX_DATA_IN_BLOCK 504 //size_t和long nNextBlock各占4byte
+#define MAX_DIR_IN_BLOCK 8
+
+const int MAX_FILENAME = 8;
+const int MAX_EXTENSION = 3;
+
+
 
 
 // 超级块结构体
@@ -33,6 +50,8 @@ struct GSuperBlock
 };
 
 // Inode结构体
+// 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
+// addr[5]是二次间接，addr[6]是三次间接。
 struct GInode
 {
     short int st_mode;       /* 权限，2字节 */
