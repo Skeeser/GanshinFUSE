@@ -37,9 +37,10 @@ const int FS_BLOCK_SIZE = 512;  // Byte
 const int SUPER_BLOCK = 1;  // Block
 const int INODE_BITMAP = 1;  // Block
 const int DATA_BITMAP = 4;  // Block
-const int BITMAP_BLOCK = 512;  // Block
+const int INODE_BLOCK = 512;  // Block
 const int INODE_SIZE = 64;  // Byte
-const int MAX_FILE = FS_BLOCK_SIZE * BITMAP_BLOCK / INODE_SIZE;
+const int MAX_FILE_NUM = FS_BLOCK_SIZE * INODE_BLOCK / INODE_SIZE;
+const int DISK_SIZE = 8 * 1024 * 1024; // 8MB Byte
 
 #define ROOT_DIR_BLOCK 1
 #define MAX_DATA_IN_BLOCK 504 //size_t和long nNextBlock各占4byte
