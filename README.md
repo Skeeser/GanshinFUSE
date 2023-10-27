@@ -10,7 +10,7 @@
     <img alt="C" src="https://img.shields.io/badge/C-gcc-%2300599C">
 </div>
 <div>
-    <img alt="platform" src="https://img.shields.io/badge/platform-Windows%20-blueviolet">
+    <img alt="platform" src="https://img.shields.io/badge/platform-Linux%20-blueviolet">
 </div>
 <div>
     <img alt="license" src="https://img.shields.io/github/license/Skeeser/GanshinFUSE">
@@ -79,6 +79,8 @@ cd ~
 git clone https://github.com/Skeeser/GanshinFUSE.git
 ```
 
+<br>
+
 #### 脚本一行构建
 ```shell
 sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
@@ -99,7 +101,10 @@ make
 <br>
 
 ### 运行
-
+在build文件夹下
+```shell
+./GanshinInit
+```
 
 <br>
 
@@ -114,6 +119,8 @@ make
 - [如何用github参与开源项目](doc/github参与开源项目流程.md)
 - [开发文档](doc/develop_log.md)
 
+<br>
+
 ## 关于作者
 
 keeser
@@ -122,7 +129,7 @@ keeser
 
 ## TODO
 
-- [ ] 先搞明白制订开发计划
+- [x] 先搞明白制订开发计划
 - [ ] 开发功能
 - [ ] 看能不能搞单元测试
 - [ ] 测试通过后整理开源仓库
