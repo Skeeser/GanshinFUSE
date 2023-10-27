@@ -11,13 +11,16 @@
 #include <stddef.h>
 #include <assert.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <fuse3/fuse.h>
 
 
 // logo
 // 存储ASCII艺术文本的字符串
 const char *const LOGO = 
-        "\033[32m\n"
+        "\033[35m\n"
         "   _____                 _     _       ______ _____ \n"
         "  / ____|               | |   (_)     |  ____/ ____|\n"
         " | |  __  __ _ _ __  ___| |__  _ _ __ | |__ | (___  \n"
