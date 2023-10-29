@@ -9,7 +9,6 @@
 - [x] 写CMakeList.txt
 - [x] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
 - [ ] 实现格式化程序(GanshinInit)
-
 - [ ] 将所有的步骤写成脚本
 
 
@@ -62,17 +61,23 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 <br>
 
 ### 初始化Bitmap
+#### 需要把InodeBitmap的初始化的对应块
+1. 根目录
 
+需要把第一个Byte的第一个bit置1
+
+<br>
+
+#### 需要把Bitmap的初始化的对应块
+1. SuperBlock
+2. InodeBitmap
+3. DataBitmap
+4. 根目录
 
 <br>
 
 
-### 根目录作为文件系统中的第一个文件，需要做的事情
-#### inode位图的第一个字节的第一位置为1，表示第一个inode已分配
-初始化inode位图
-
-<br>
-
+### 初始化Inode
 #### 将根目录的相关信息填写到inode区的第一个inode。
 
 
@@ -81,3 +86,4 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 ## 参考资料
 
 - [inode 详解](https://www.cnblogs.com/llife/p/11470668.html)
+- [fuse结合buildroot](https://cloud.tencent.com/developer/article/1006138?areaSource=106002.3)

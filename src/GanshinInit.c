@@ -25,40 +25,87 @@ static void initSuperBlock(FILE *const fp)
     free(super_blk);
 } 
 
-// 初始化Bitmap
-static void initBitmap(FILE *const fp)
+// Bitmap 总大小 (INODE_BITMAP + DATA_BITMAP) * FS_BLOCK_SIZE * 8  bit
+// 初始化InodeBitmap
+static void initInodeBitmap(FILE *const fp)
 {
-    // 移动指针到文件的第二块
-    if (fseek(fp, FS_BLOCK_SIZE * 1, SEEK_SET) == 0){
+    // 移动指针到文件的InodeBitmap块
+    if (fseek(fp, FS_BLOCK_SIZE * (SUPER_BLOCK), SEEK_SET) == 0){
+        printSuccess("InodeBitmap fseek success!");
+    }else{
+        printError("InodeBitmap fseek failed!");
+    }
+
+    /* 
+    需要把InodeBitmap的初始化的对应块
+    1. 根目录
+
+    需要把第一个Byte的第一个bit置1
+    */
+    const int inode_bitmap_bit = INODE_BITMAP * FS_BLOCK_SIZE * 8;
+  
+    // 第一个Byte的第一个bit置1
+    int temp_data=0;
+    int mask = 1;
+	mask <<= 31;  
+    temp_data |= mask;
+
+    fwrite(&temp_data, sizeof(int), 1, fp);
+    
+    //接着是剩余的部分置0, 
+    int rest_of_bitmap= (inode_bitmap_bit - 32) / 32;
+    int rest_data[rest_of_bitmap];
+    memset(rest_data, 0, sizeof(rest_data));
+    fwrite(rest_data, sizeof(rest_data), 1, fp);
+    
+    printSuccess("Initial InodeBitmap success!");
+}
+
+// 初始化DataBitmap
+static void initDataBitmap(FILE *const fp)
+{
+    // 移动指针到文件的DataBitmap块
+    if (fseek(fp, FS_BLOCK_SIZE * (SUPER_BLOCK + INODE_BITMAP), SEEK_SET) == 0){
         printSuccess("Bitmap fseek success!");
     }else{
         printError("Bitmap fseek failed!");
     }
 
-    // Bitmap 总大小 (INODE_BITMAP + DATA_BITMAP) * FS_BLOCK_SIZE * 8  bit
-    int a[40];//刚好大小为1280bit，可以用来初始化bitmap_block的前1280bit
-    memset(a,-1,sizeof(a));
-    fwrite(a,sizeof(a),1,fp);
+    /* 
+    需要把DataBitmap的初始化的对应块
+    1. SuperBlock  1
+    2. InodeBitmap  1
+    3. DataBitmap  4 
+    4. 根目录   1
+    */
+    const int data_bitmap_bit = DATA_BITMAP * FS_BLOCK_SIZE * 8;
+    const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + 1;
+
+    const int int_block_num = used_block / 32;
+    if(int_block_num){
+        int a[int_block_num];
+        memset(a,0,sizeof(a));
+        fwrite(a,sizeof(a),1,fp);
+    }
     
-    //然后我们还有2bit需要置1
-    int b=0;
-    int mask = 1;
-	mask <<= 30;    //1281
-	b |= mask;
-	mask <<= 1;     //1280
-	b |= mask;
-    fwrite(&b, sizeof(int), 1, fp);
-        //接着是包含这1282bit的块剩余的部分置0
-    int c[87];
-    memset(c,0,sizeof(c));
-    fwrite(c,sizeof(c),1,fp);
-        //最后要将bitmap剩余的1279块全部置0，用int数组设置，一个int为4byte
-    int rest_of_bitmap=(1279*512)/4;
-    int d[rest_of_bitmap];
-    memset(d,0,sizeof(d));
-    fwrite(d,sizeof(d),1,fp);
-     printf("initial bitmap_block success!\n");
+    int temp_data=0;
+    const int rest_used_block = used_block % 32;
+    for(int i = 0 ; i < rest_used_block; i++){
+        int mask = 1;
+	    mask <<= (31 - i);    //1281
+	    temp_data |= mask;
+    }
+    fwrite(&temp_data, sizeof(int), 1, fp);
+    
+    //接着是剩余的部分置0, 
+    const int rest_of_bitmap= (data_bitmap_bit - int_block_num * 32 - 32) / 32;
+    int rest_data[rest_of_bitmap];
+    memset(rest_data, 0, sizeof(rest_data));
+    fwrite(rest_data, sizeof(rest_data), 1, fp);
+
+    printSuccess("Initial DataBitmap success!");
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -74,10 +121,14 @@ int main(int argc, char *argv[])
     }
     printSuccess("Open disk file success!");
     
-    // 初始化超级块
-    initSuperBlock(fp);
+    // 初始化InodeBitmap
+    initInodeBitmap(fp);
 
-    // 初始化Bitmap
+    // 初始化DataBitmap
+    initDataBitmap(fp);
+
+    // 初始化Inode
+
 
     fclose(fp);
     return 0;
