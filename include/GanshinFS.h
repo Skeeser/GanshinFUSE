@@ -9,5 +9,6 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #define __GANSHINFS_H__
 
 #include "Config.h"
+#include "Utils.h"
 
 #endif
