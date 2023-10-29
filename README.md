@@ -102,9 +102,18 @@ make
 
 ### 运行
 在build文件夹下
+
+#### 初始化
+
 ```shell
 ./GanshinInit
 ```
+
+能够看到本项目的logo
+
+<div align="left" >
+<img alt="logo2" src="assets/logo.png" />
+</div>
 
 <br>
 
@@ -116,6 +125,7 @@ make
 ## 如何贡献
 如果你见到了这个项目并且想要完善它  
 强烈建议阅读下面文档  
+
 - [如何用github参与开源项目](doc/github参与开源项目流程.md)
 - [开发文档](doc/develop_log.md)
 
