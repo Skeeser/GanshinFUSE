@@ -1,6 +1,12 @@
+/*
+Author: keeser
+Email: 1326658417@qq.com
+Liense: GPL 2.0
+Github: https://github.com/Skeeser/GanshinFUSE
+*/
+
+
 #include "../include/GanshinInit.h"
-
-
 
 // 将文件系统的相关信息写入超级块
 static void initSuperBlock(FILE *const fp)
@@ -107,7 +113,10 @@ static void initDataBitmap(FILE *const fp)
 }
 
 // 初始化Inode
-// static void init
+static void initInode(FILE *const fp)
+{
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -130,8 +139,12 @@ int main(int argc, char *argv[])
     initDataBitmap(fp);
 
     // 初始化Inode
+    initInode(fp);
 
-
+    // 释放fp
     fclose(fp);
+
+    // 开香槟
+    printSuccess("Super_Bitmap_Inode_Data_blocks init success!");
     return 0;
 }
