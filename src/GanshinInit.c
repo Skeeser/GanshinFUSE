@@ -106,6 +106,8 @@ static void initDataBitmap(FILE *const fp)
     printSuccess("Initial DataBitmap success!");
 }
 
+// 初始化Inode
+// static void init
 
 int main(int argc, char *argv[])
 {

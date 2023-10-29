@@ -79,21 +79,21 @@ struct GInode
 };
 
 
-//记录文件信息的数据结构,统一存放在目录文件里面，也就是说目录文件里面存的全部都是这个结构，大小为 64 bytes，占用1块磁盘块
-struct file_directory {
-    char fname[MAX_FILENAME + 1]; //文件名 (plus space for nul)
-    char fext[MAX_EXTENSION + 1]; //扩展名 (plus space for nul)
-    size_t fsize; //文件大小（file size）
-    long nStartBlock; //目录开始块位置（where the first block is on disk）
-    int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
-};
+// //记录文件信息的数据结构,统一存放在目录文件里面，也就是说目录文件里面存的全部都是这个结构，大小为 64 bytes，占用1块磁盘块
+// struct file_directory {
+//     char fname[MAX_FILENAME + 1]; //文件名 (plus space for nul)
+//     char fext[MAX_EXTENSION + 1]; //扩展名 (plus space for nul)
+//     size_t fsize; //文件大小（file size）
+//     long nStartBlock; //目录开始块位置（where the first block is on disk）
+//     int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
+// };
 
-//文件内容存放用到的数据结构，大小为 512 bytes，占用1块磁盘块
-struct data_block {
-    size_t size; //文件的数据部分使用了这个块里面的多少Bytes
-    long nNextBlock; //（该文件太大了，一块装不下，所以要有下一块的地址）   long的大小为4Byte
-    char data[MAX_DATA_IN_BLOCK];// And all the rest of the space in the block can be used for actual data storage.
-};
+// //文件内容存放用到的数据结构，大小为 512 bytes，占用1块磁盘块
+// struct data_block {
+//     size_t size; //文件的数据部分使用了这个块里面的多少Bytes
+//     long nNextBlock; //（该文件太大了，一块装不下，所以要有下一块的地址）   long的大小为4Byte
+//     char data[MAX_DATA_IN_BLOCK];// And all the rest of the space in the block can be used for actual data storage.
+// };
 
 
 #endif
