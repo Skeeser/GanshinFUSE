@@ -25,36 +25,37 @@ Github: https://github.com/Skeeser/GanshinFUSE
 
 // logo
 // 存储ASCII艺术文本的字符串
-const char *const LOGO = 
-        "\033[35m\n"
-        "   _____                 _     _       ______ _____ \n"
-        "  / ____|               | |   (_)     |  ____/ ____|\n"
-        " | |  __  __ _ _ __  ___| |__  _ _ __ | |__ | (___  \n"
-        " | | |_ |/ _` | '_ \\/ __| '_ \\| | '_ \\|  __| \\___ \\ \n"
-        " | |__| | (_| | | | \\__ \\ | | | | | | | |    ____) |\n"
-        "  \\_____|\\__,_|_| |_|___/_| |_|_|_| |_|_|   |_____/ \n"
-        "\033[0m\n";
+#define LOGO \
+        "\033[35m\n"\
+        "   _____                 _     _       ______ _____ \n"\
+        "  / ____|               | |   (_)     |  ____/ ____|\n"\
+        " | |  __  __ _ _ __  ___| |__  _ _ __ | |__ | (___  \n"\
+        " | | |_ |/ _` | '_ \\/ __| '_ \\| | '_ \\|  __| \\___ \\ \n"\
+        " | |__| | (_| | | | \\__ \\ | | | | | | | |    ____) |\n"\
+        "  \\_____|\\__,_|_| |_|___/_| |_|_|_| |_|_|   |_____/ \n"\
+        "\033[0m\n"
 
 
 // 用作文件系统的磁盘文件
-const char *const DISK_PATH = "../out/diskimg";
-// 一些文件系统的设置, 不用#define是因为define的名称编译器看不见
-const int FS_BLOCK_SIZE = 512;  // Byte
-const int SUPER_BLOCK = 1;  // Block
-const int INODE_BITMAP = 1;  // Block
-const int DATA_BITMAP = 4;  // Block
-const int INODE_BLOCK = 512;  // Block
-const int INODE_SIZE = 64;  // Byte
+#define DISK_PATH  "../out/diskimg"
+// 一些文件系统的设置
+#define FS_BLOCK_SIZE 512 // Byte
+#define SUPER_BLOCK 1  // Block
+#define INODE_BITMAP 1  // Block
+#define DATA_BITMAP 4  // Block
+#define INODE_BLOCK 512  // Block
+#define INODE_SIZE 64  // Byte
 
-const int MAX_FILE_NUM = FS_BLOCK_SIZE * INODE_BLOCK / INODE_SIZE;
-const int DISK_SIZE = 8 * 1024 * 1024; // 8MB Byte
-const int TOTAL_BLOCK_NUM = DISK_SIZE / FS_BLOCK_SIZE;
+#define MAX_FILE_NUM FS_BLOCK_SIZE*INODE_BLOCK/INODE_SIZE
+#define DISK_SIZE  8*1024*1024 // 8MB Byte
+#define TOTAL_BLOCK_NUM  DISK_SIZE/FS_BLOCK_SIZE
 
 // const int MAX_DATA_IN_BLOCK = 504; //size_t和long nNextBlock各占4byte
-const int MAX_DIR_IN_BLOCK = 8;
-const int MAX_FILENAME = 8;
-const int MAX_EXTENSION = 3;
-const long FILE_SIZE = 4096;  // Byte
+#define MAX_DIR_IN_BLOCK 8
+#define FILE_SIZE 4096  // Byte
+
+# define MAX_FILENAME 8
+# define MAX_EXTENSION 3
 
 // 超级块结构体
 // 9 * 8 = 72 Byte
@@ -89,8 +90,8 @@ struct GInode
 
 // 记录文件信息的数据结构, 统一存放在目录文件里面
 struct GFileData {
-    char fname[MAX_FILENAME + 1]; //文件名 (plus space for nul)
-    char fext[MAX_EXTENSION + 1]; //扩展名 (plus space for nul)
+    char fname[MAX_FILENAME + 1]; //文件名 
+    char fext[MAX_EXTENSION + 1]; //扩展名
     size_t fsize; //文件大小（file size）
     long nStartBlock; //目录开始块位置（where the first block is on disk）
     int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
