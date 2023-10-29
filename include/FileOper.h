@@ -10,5 +10,6 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "Utils.h"
 #include "Config.h"
 
+int readDataByBlkId(long blk_id,struct DataBlock *data_blk);
 
 #endif

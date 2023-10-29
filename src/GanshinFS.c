@@ -24,7 +24,7 @@ static int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_in
     (void) fi;
 	int res = 0;
 
-	struct GFileData *const attr = malloc(sizeof(struct GFileData));
+	struct GFileDir *const attr = malloc(sizeof(struct GFileDir));
 
 	// if (get_fd_to_attr(path, attr) == -1) 
 	// {
