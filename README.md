@@ -52,6 +52,7 @@ OS File System Based on FUSE.
 - build => 编译文件
 - example => 存放示例文件
 - out => 存放磁盘文件
+- test => 测试代码
 - CMakeLists.txt => CMake 配置文件
 - build.sh => 构建脚本
 
@@ -69,6 +70,7 @@ Linux
 - cmake
 - gcc
 - libfuse
+- gtest (开发测试需要)
 
 <br>
 

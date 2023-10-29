@@ -10,6 +10,8 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "Utils.h"
 #include "Config.h"
 
-int readDataByBlkId(long blk_id,struct DataBlock *data_blk);
+int readDataByBlkId(long blk_id,struct GDataBlock *data_blk);
+
+int getFileDirToAttr(const char * path,struct GFileDir *attr);
 
 #endif

@@ -7,7 +7,7 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "FileOper.h"
 
 // 根据块号, 读取文件数据
-int readDataByBlkId(long blk_id,struct DataBlock *data_blk)
+int readDataByBlkId(long blk_id,struct GDataBlock *data_blk)
 {
 	// 读取文件
     FILE *fp = NULL;
@@ -20,7 +20,7 @@ int readDataByBlkId(long blk_id,struct DataBlock *data_blk)
 
 	// 文件打开后，就用blk_id * FS_BLOCK_SIZE作为偏移量
 	fseek(fp, blk_id * FS_BLOCK_SIZE, SEEK_SET);
-	fread(data_blk, sizeof(struct DataBlock), 1 , fp);
+	fread(data_blk, sizeof(struct GDataBlock), 1 , fp);
 	
     // 判断是否正确读取
     if(ferror(fp))
@@ -34,14 +34,14 @@ int readDataByBlkId(long blk_id,struct DataBlock *data_blk)
 }
 
 // 根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
-int readDataByBlkId(const char * path,struct GFileDir *attr)
+int getFileDirToAttr(const char * path,struct GFileDir *attr)
 {
 	// 获取磁盘根目录块的位置
 	printSuccess("Get File Dir To Attr Start!");
 	printf("getFileDirToAttr: get file dir by: %s\n", path);
 	
-    struct DataBlock *data_blk;
-	data_blk = malloc(sizeof(struct DataBlock));
+    struct GDataBlock *data_blk;
+	data_blk = malloc(sizeof(struct GDataBlock));
 
 	// 读出超级块
 	if (read_cpy_data_block(0, data_blk) == -1) 
@@ -54,16 +54,21 @@ int readDataByBlkId(const char * path,struct GFileDir *attr)
     }
 
 
-	printf("check2:clear\n\n");
-	struct super_block* sb_blk;
-	sb_blk = (struct super_block*) data_blk;
+	struct GSuperBlock* sp_blk;
+    // 将原本GDataBlock的数据转换成GSuperBlock
+	sp_blk = (struct GSuperBlock*) data_blk;
 	long start_blk;
-	start_blk = sb_blk->first_blk;
-	printf("检查sb_blk:\nfs_size=%ld\nfirst_blk=%ld\nbitmap=%ld\n\n",sb_blk->fs_size,sb_blk->first_blk,sb_blk->bitmap);
-	printf("start_blk:%ld\n\n",start_blk);
-	char *tmp_path,*m,*n;//tmp_path用来临时记录路径，然后m,n两个指针是用来定位文件名和
-	tmp_path=strdup(path);m=tmp_path;
-	printf("check3:clear\n\n");
+	start_blk = sp_blk->first_blk;
+	
+    printf("Super Block:\nfs_size=%ld, first_blk=%ld, datasize=%ld, first_inode=%ld, inode_area_size=%ld, fisrt_blk_of_inodebitmap=%ld, inodebitmap_size=%ld, first_blk_of_databitmap=%ld, databitmap_size=%ld\n",
+       sp_blk->fs_size, sp_blk->first_blk, sp_blk->datasize, sp_blk->first_inode, sp_blk->inode_area_size, sp_blk->fisrt_blk_of_inodebitmap,
+       sp_blk->inodebitmap_size, sp_blk->first_blk_of_databitmap, sp_blk->databitmap_size);
+
+	printf("start_blk:%ld\n",start_blk);
+	char *tmp_path, *m, *n;
+	tmp_path=strdup(path);
+    m=tmp_path;
+
 	//如果路径为空，则出错返回1
 	if (!tmp_path) 
 	{
@@ -170,7 +175,9 @@ int readDataByBlkId(const char * path,struct GFileDir *attr)
 	}
 	//循环结束都还没找到，则返回-1
 	printf("get_fd_to_attr：在父目录下没有找到该path的file_directory\n\n");
-	free(data_blk);
+	
+    free(tmp_path);
+    free(data_blk);
 	return -1;
 }
 

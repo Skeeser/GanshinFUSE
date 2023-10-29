@@ -99,7 +99,7 @@ struct GFileDir {
 };
 
 // 文件内容存放用到的数据结构，大小为 512 bytes，占用1块磁盘块
-struct DataBlock {
+struct GDataBlock {
     size_t size; //文件的数据部分使用了这个块里面的多少Bytes
     char data[MAX_DATA_IN_BLOCK];// And all the rest of the space in the block can be used for actual data storage.
 };

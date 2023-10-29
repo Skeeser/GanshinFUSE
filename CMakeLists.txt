@@ -39,3 +39,6 @@ target_link_libraries(${EXE_FS} PUBLIC ${FUSE_LIBRARIES})
 find_package(Threads REQUIRED)
 target_link_libraries(${EXE_INIT} PUBLIC Threads::Threads)
 target_link_libraries(${EXE_FS} PUBLIC Threads::Threads)
+
+find_package(GTest CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)

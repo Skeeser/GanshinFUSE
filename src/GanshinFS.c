@@ -26,10 +26,12 @@ static int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_in
 
 	struct GFileDir *const attr = malloc(sizeof(struct GFileDir));
 
-	// if (get_fd_to_attr(path, attr) == -1) 
-	// {
-	// 	free(attr);	printf("MFS_getattr：get_fd_to_attr时发生错误，函数结束返回\n\n");return -ENOENT;
-	// }
+	if (getFileDirToAttr(path, attr) == -1) 
+	{
+		free(attr);	
+        printError("GFS_getattr: get FileDir To Attr failed!");
+        return -ENOENT;
+	}
 	
     // memset(stbuf, 0, sizeof(struct stat));//将stat结构中成员的值全部置0
 	

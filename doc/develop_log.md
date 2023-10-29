@@ -34,6 +34,25 @@ fusermount -u testmount
 
 <br>
 
+## gtest
+### 安装
+```shell
+cd ~
+git clone https://github.com/google/googletest.git
+sudo apt-get install cmake
+cd ~/googletest/
+mkdir build
+cd build/
+cmake ..
+make
+sudo make install
+```
+
+### 编译
+
+
+<br>
+
 ## 创建过程
 ### 创建文件系统所在的文件 
 ```shell
@@ -95,6 +114,13 @@ i节点, 根目录指向data区的一个块地址
 <br>
 
 ## 文件操作功能封装(FileOper)
+### int readDataByBlkId(long blk_id,struct GDataBlock *data_blk);
+读取超级块, 然后把数据放在data_blk里
+
+### int getFileDirToAttr(const char * path,struct GFileDir *attr);
+根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
+#### 实现思路
+1. path
 
 <br>
 
