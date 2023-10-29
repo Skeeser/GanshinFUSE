@@ -86,6 +86,15 @@ i节点, 根目录指向data区的一个块地址
 <br>
 
 ## 文件系统实现(GanshinFS)
+### 初始化GFS_init
+暂时没有什么要初始化操作的
+
+### 获取文件属性GFS_getattr
+要利用到Config.h定义的GFileData数据结构
+
+<br>
+
+## 文件操作功能封装(FileOper)
 
 <br>
 

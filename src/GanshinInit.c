@@ -13,7 +13,7 @@ static void initSuperBlock(FILE *const fp)
 {
     //动态内存分配，申请super_blk
     struct GSuperBlock *const super_blk = malloc(sizeof(struct GSuperBlock));
-    super_blk->fs_size = DISK_SIZE / FS_BLOCK_SIZE;
+    super_blk->fs_size = TOTAL_BLOCK_NUM;
     // 从0开始, 超级块数 + InodeBitMap块数 + DataBitMap块数 + Inode块数
     super_blk->first_blk = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + INODE_BLOCK;
     super_blk->datasize = DATA_BITMAP * FS_BLOCK_SIZE * 8;

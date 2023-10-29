@@ -45,8 +45,10 @@ const int INODE_BITMAP = 1;  // Block
 const int DATA_BITMAP = 4;  // Block
 const int INODE_BLOCK = 512;  // Block
 const int INODE_SIZE = 64;  // Byte
+
 const int MAX_FILE_NUM = FS_BLOCK_SIZE * INODE_BLOCK / INODE_SIZE;
 const int DISK_SIZE = 8 * 1024 * 1024; // 8MB Byte
+const int TOTAL_BLOCK_NUM = DISK_SIZE / FS_BLOCK_SIZE;
 
 // const int MAX_DATA_IN_BLOCK = 504; //size_t和long nNextBlock各占4byte
 const int MAX_DIR_IN_BLOCK = 8;
@@ -85,14 +87,14 @@ struct GInode
 };
 
 
-// //记录文件信息的数据结构,统一存放在目录文件里面，也就是说目录文件里面存的全部都是这个结构，大小为 64 bytes，占用1块磁盘块
-// struct file_directory {
-//     char fname[MAX_FILENAME + 1]; //文件名 (plus space for nul)
-//     char fext[MAX_EXTENSION + 1]; //扩展名 (plus space for nul)
-//     size_t fsize; //文件大小（file size）
-//     long nStartBlock; //目录开始块位置（where the first block is on disk）
-//     int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
-// };
+// 记录文件信息的数据结构, 统一存放在目录文件里面
+struct GFileData {
+    char fname[MAX_FILENAME + 1]; //文件名 (plus space for nul)
+    char fext[MAX_EXTENSION + 1]; //扩展名 (plus space for nul)
+    size_t fsize; //文件大小（file size）
+    long nStartBlock; //目录开始块位置（where the first block is on disk）
+    int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
+};
 
 // //文件内容存放用到的数据结构，大小为 512 bytes，占用1块磁盘块
 // struct data_block {
