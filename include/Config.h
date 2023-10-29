@@ -48,11 +48,11 @@ const int INODE_SIZE = 64;  // Byte
 const int MAX_FILE_NUM = FS_BLOCK_SIZE * INODE_BLOCK / INODE_SIZE;
 const int DISK_SIZE = 8 * 1024 * 1024; // 8MB Byte
 
-const int MAX_DATA_IN_BLOCK = 504; //size_t和long nNextBlock各占4byte
+// const int MAX_DATA_IN_BLOCK = 504; //size_t和long nNextBlock各占4byte
 const int MAX_DIR_IN_BLOCK = 8;
 const int MAX_FILENAME = 8;
 const int MAX_EXTENSION = 3;
-
+const long FILE_SIZE = 4096;  // Byte
 
 // 超级块结构体
 // 9 * 8 = 72 Byte

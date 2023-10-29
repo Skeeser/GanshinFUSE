@@ -115,7 +115,40 @@ static void initDataBitmap(FILE *const fp)
 // 初始化Inode
 static void initInode(FILE *const fp)
 {
+    // 移动指针到文件的Inode块
+    if (fseek(fp, FS_BLOCK_SIZE * (SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP), SEEK_SET) == 0){
+        printSuccess("Inode fseek success!");
+    }else{
+        printError("Inode fseek failed!");
+    }
 
+    struct GInode *const root = malloc(sizeof(struct GInode));
+    // 为根目录的 struct GInode 对象赋值
+    root->st_mode = 0755; // 权限，例如 rwxr-xr-x
+    root->st_ino = 0;     // i-node号为0
+    root->st_nlink = 1;   // 连接数，通常为1
+    root->st_uid = 0;     // 根目录的用户 ID，通常为0（超级用户）
+    root->st_gid = 0;     // 根目录的组 ID，通常为0（超级用户组）
+    root->st_size = FILE_SIZE; // 文件大小，为4KB
+    // 设置 st_atim 和其他字段
+    struct timespec last_access_time;
+    // 使用 clock_gettime 函数获取当前时间戳
+    if (clock_gettime(0, &last_access_time) == 0) {
+        printSuccess("Inode get time success!");
+    } else {
+        printError("Inode get time failed!");
+    }
+    root->st_atim = last_access_time;
+    // 设置磁盘地址
+    // 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
+    // addr[5]是二次间接，addr[6]是三次间接。
+    memset(root->addr, -1, sizeof(root->addr));
+     const int data_first_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + INODE_BLOCK;
+    // 根目录指向data区的一个块地址
+    root->addr[0] = data_first_block;
+    fwrite(root, sizeof(struct GInode), 1, fp); //写入磁盘，初始化完成
+    free(root);
+    printSuccess("Initial Inode success!");
 }
 
 int main(int argc, char *argv[])
@@ -145,6 +178,6 @@ int main(int argc, char *argv[])
     fclose(fp);
 
     // 开香槟
-    printSuccess("Super_Bitmap_Inode_Data_blocks init success!");
+    printSuccess("Super_Bitmap_Inode_Data_Blocks init success!");
     return 0;
 }

@@ -8,7 +8,8 @@
 - [x] 尝试读懂hello.c的源码
 - [x] 写CMakeList.txt
 - [x] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
-- [ ] 实现格式化程序(GanshinInit)
+- [x] 实现格式化程序(GanshinInit)
+- [ ] 文件系统实现(GanshinFS)
 - [ ] 将所有的步骤写成脚本
 
 
@@ -79,7 +80,12 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 
 ### 初始化Inode
 #### 将根目录的相关信息填写到inode区的第一个inode。
+**索引表结构**
+i节点, 根目录指向data区的一个块地址
 
+<br>
+
+## 文件系统实现(GanshinFS)
 
 <br>
 
