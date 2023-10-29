@@ -66,9 +66,9 @@ static void initDataBitmap(FILE *const fp)
 {
     // 移动指针到文件的DataBitmap块
     if (fseek(fp, FS_BLOCK_SIZE * (SUPER_BLOCK + INODE_BITMAP), SEEK_SET) == 0){
-        printSuccess("Bitmap fseek success!");
+        printSuccess("DataBitmap fseek success!");
     }else{
-        printError("Bitmap fseek failed!");
+        printError("DataBitmap fseek failed!");
     }
 
     /* 
