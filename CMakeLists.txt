@@ -18,7 +18,7 @@ AUX_SOURCE_DIRECTORY(src DIR_SRCS)
 # set environment variable，设置环境变量，编译用到的源文件全部都要放到这里，否则编译能够通过，但是执行 的时候会出现各种问题，比如"symbol lookup error xxxxx , undefined symbol"
 SET(SRC_INIT src/GanshinInit.c src/Utils.c)
 SET(EXE_INIT GanshinInit)
-SET(SRC_FS src/GanshinFS.c src/Utils.c src/FileOper.c)
+SET(SRC_FS src/GanshinFS.c src/Utils.c src/FileOper.c src/GFSFctional.c)
 SET(EXE_FS GanshinFS)
  
 # add executable file，添加要编译的可执行文件

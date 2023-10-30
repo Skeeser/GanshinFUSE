@@ -48,8 +48,8 @@ make
 sudo make install
 ```
 
-### 编译
-
+### 测试文件
+在test文件夹下
 
 <br>
 
