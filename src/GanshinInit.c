@@ -131,14 +131,24 @@ static void initInode(FILE *const fp)
     root->st_gid = 0;     // 根目录的组 ID，通常为0（超级用户组）
     root->st_size = FILE_SIZE; // 文件大小，为4KB
     // 设置 st_atim 和其他字段
-    struct timespec last_access_time;
-    // 使用 clock_gettime 函数获取当前时间戳
-    if (clock_gettime(0, &last_access_time) == 0) {
-        printSuccess("Inode get time success!");
-    } else {
+    // struct timespec last_access_time;
+    // // 使用 clock_gettime 函数获取当前时间戳
+    // if (clock_gettime(0, &last_access_time) == 0) {
+    //     printSuccess("Inode get time success!");
+    // } else {
+    //     printError("Inode get time failed!");
+    // }
+    // root->st_atim = last_access_time;
+    time_t currentTime;
+    currentTime = time(NULL); // 获取当前时间
+
+    if (currentTime == (time_t)-1) {
         printError("Inode get time failed!");
+    }else {
+        printError("Inode get time success!");
     }
-    root->st_atim = last_access_time;
+    root->st_atim = currentTime;
+
     // 设置磁盘地址
     // 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
     // addr[5]是二次间接，addr[6]是三次间接。
