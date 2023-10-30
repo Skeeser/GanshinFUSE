@@ -6,24 +6,44 @@ PROJECT(GanshinFUSE)
  
 # SET(CMAKE_CXX_STANDARD 11) # 设置c++版本为c11 
 SET(CMAKE_C_STANDARD 11)  # 设置c标准
- 
+
+# 定义一个选项，用于控制生成何种类型的Makefile
+option(USE_DEBUG "Build with debug flags" OFF)
+
+# 在Debug模式下添加调试标志，优化标志，和gtest
+if(USE_DEBUG)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
+    set(CMAKE_BUILD_TYPE Debug)
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
+
 # head file path，头文件目录
 INCLUDE_DIRECTORIES(
  include
 )
  
 # source directory，源文件目录
-AUX_SOURCE_DIRECTORY(src DIR_SRCS)
+# AUX_SOURCE_DIRECTORY(src DIR_SRCS)
  
 # set environment variable，设置环境变量，编译用到的源文件全部都要放到这里，否则编译能够通过，但是执行 的时候会出现各种问题，比如"symbol lookup error xxxxx , undefined symbol"
 SET(SRC_INIT src/GanshinInit.c src/Utils.c)
 SET(EXE_INIT GanshinInit)
 SET(SRC_FS src/GanshinFS.c src/Utils.c src/FileOper.c src/GFSFctional.c)
 SET(EXE_FS GanshinFS)
- 
+SET(SRC_TEST test/GanshinTest.c src/Utils.c src/FileOper.c src/GFSFctional.c)
+SET(EXE_TEST GanshinTest)
+
+
+
 # add executable file，添加要编译的可执行文件
 ADD_EXECUTABLE(${EXE_INIT} ${SRC_INIT})
 ADD_EXECUTABLE(${EXE_FS} ${SRC_FS})
+ADD_EXECUTABLE(${EXE_TEST} ${SRC_TEST})
+
 
 # 链接libfuse3库和pthread库
 find_package(PkgConfig)
@@ -36,9 +56,13 @@ target_link_libraries(${EXE_INIT} PUBLIC ${FUSE_LIBRARIES})
 target_include_directories(${EXE_FS} PUBLIC ${FUSE_INCLUDE_DIRS})
 target_link_libraries(${EXE_FS} PUBLIC ${FUSE_LIBRARIES})
 
+target_include_directories(${SRC_TEST} PUBLIC ${FUSE_INCLUDE_DIRS})
+target_link_libraries(${SRC_TEST} PUBLIC ${FUSE_LIBRARIES})
+
 find_package(Threads REQUIRED)
 target_link_libraries(${EXE_INIT} PUBLIC Threads::Threads)
 target_link_libraries(${EXE_FS} PUBLIC Threads::Threads)
+target_link_libraries(${SRC_TEST} PUBLIC Threads::Threads)
 
 find_package(GTest CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+target_link_libraries(${SRC_TEST} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)

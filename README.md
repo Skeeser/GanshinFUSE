@@ -92,19 +92,31 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 <br>
 
 #### 编译
-
+**release下编译**
 ```shell
 cd ~/GanshinFUSE/
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make
+```
+
+<br>
+
+**debug下编译**
+```shell
+cd ~/GanshinFUSE/
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug .. 
 make
 ```
 
 <br>
 
 ### 运行
-在build文件夹下
+**在build文件夹下**
+
 
 #### 初始化
 
