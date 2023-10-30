@@ -132,6 +132,16 @@ make
 
 <br>
 
+#### GanshinFS 启动
+```shell
+./GanshinFS
+```
+
+#### 运行测试
+```shell
+./GanhsinTest
+```
+
 ## 使用指南
 - 注意依赖有没有装上
 

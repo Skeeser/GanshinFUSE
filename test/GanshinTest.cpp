@@ -6,7 +6,8 @@ extern "C"
 
 TEST(GFS_init, init)
 {
-    ASSERT_EQ(NULL, GFS_init((fuse_conn_info *)NULL, (fuse_config *)NULL));
+    void *ret = GFS_init((fuse_conn_info *)NULL, (fuse_config *)NULL);
+    ASSERT_EQ(NULL, ret);
 }
 
 int main(int argc, char *argv[])

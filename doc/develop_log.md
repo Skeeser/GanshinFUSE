@@ -50,6 +50,15 @@ sudo make install
 
 ### 测试文件
 在test文件夹下
+由于要用到自己写的c库, 所以测试的代码要写上extern C
+所以先把c库编译成静态库, 再链接到测试的cpp
+
+### 单独运行某个测试样例
+```shell
+./GanshinTest --gtest_filter=GFS_init.init
+```
+
+
 
 <br>
 
