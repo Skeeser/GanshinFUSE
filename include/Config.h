@@ -76,6 +76,7 @@ struct GSuperBlock
 // Inode结构体
 // 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
 // addr[5]是二次间接，addr[6]是三次间接。
+// 一个间接块最大可以存储 FS_BLOCK_SIZE / sizeof(short int) = 254块
 struct GInode
 {
     short int st_mode;       /* 权限，2字节 */
@@ -84,7 +85,8 @@ struct GInode
     uid_t st_uid;            /* 拥有者的用户 ID ，4字节 */
     gid_t st_gid;            /* 拥有者的组 ID，4字节  */
     off_t st_size;           /*文件大小，4字节 */
-    struct timespec st_atim; /* 16个字节time of last access */
+    //struct timespec st_atim; /* 16个字节time of last access */
+    time_t st_atim; /* 16个字节time of last access */
     short int addr[7];       /*磁盘地址，14字节*/
 };
 
@@ -94,7 +96,8 @@ struct GFileDir {
     char fname[MAX_FILENAME + 1]; //文件名 
     char fext[MAX_EXTENSION + 1]; //扩展名
     size_t fsize; //文件大小（file size）
-    long nStartBlock; //目录开始块位置（where the first block is on disk）
+    long nMenuBlock; //目录块位置（where the first block is on disk）
+    long nInodeBlock; // 该文件的inode块位置
     int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
 };
 

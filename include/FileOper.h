@@ -10,8 +10,18 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "Utils.h"
 #include "Config.h"
 
+// path
+int checkFilePath(const char * path);
+
 int readDataByBlkId(long blk_id,struct GDataBlock *data_blk);
 
-int getFileDirToAttr(const char * path,struct GFileDir *attr);
+int getInodeBlkByPath(const char * path, long *file_inode);
+int getFileDirByPath(const char * path,struct GFileDir *attr);
+
+void fillStatByInode(struct GInode *inode, struct stat *st);
+
+
+short int retShortIntFromData(const char* data, int offset);
+void getFileBlkNum(struct GInode *inode, int *blk_num);
 
 #endif
