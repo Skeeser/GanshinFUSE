@@ -129,8 +129,9 @@ i节点, 根目录指向data区的一个块地址
 ### int getFileDirToAttr(const char * path,struct GFileDir *attr);
 根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
 #### 实现思路
-1. path
-
+1. 读出超级块, 拿到相关数据
+2. 将超级块类型转换为GSuperBlock
+3. 解析path
 <br>
 
 ## 参考资料

@@ -91,7 +91,7 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 
 <br>
 
-#### 编译
+### 编译
 **release下编译**
 ```shell
 cd ~/GanshinFUSE/
