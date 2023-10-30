@@ -39,7 +39,7 @@ int getFileDirToAttr(const char * path,struct GFileDir *attr)
 	// 获取磁盘根目录块的位置
 	printSuccess("Get File Dir To Attr Start!");
 	printf("getFileDirToAttr: get file dir by: %s\n", path);
-	
+	/*
     struct GDataBlock *data_blk;
 	data_blk = malloc(sizeof(struct GDataBlock));
 
@@ -178,6 +178,7 @@ int getFileDirToAttr(const char * path,struct GFileDir *attr)
 	
     free(tmp_path);
     free(data_blk);
+	*/
 	return -1;
 }
 
