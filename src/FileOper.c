@@ -63,33 +63,78 @@ int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i)
 }
 
 // 根据hash_num和cur_i, 返回对应的FileDir todo: 解决哈希冲突
-int getFileDirByHash(const int hash_num, const int cur_i, int *target_i)
+int getFileDirByHash(const int hash_num, const int cur_i, int *target_i, struct GFileDir * p_filedir)
 {
 	struct  GInode * temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	// 获取当前inode号的inode
 	readInodeByBlkId(cur_i, temp_inode);
-	struct GDataBlock *zeroth_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
+	
 
 	// todo: 解决哈希冲突
-	if(0 <= hash_num <= FD_ZEROTH_INDIR){
+	if(0 <= hash_num < FD_ZEROTH_INDIR){
 		int i = hash_num / FD_PER_BLK;
 		short int addr = temp_inode->addr[i];
-		readDataByBlkId(addr, zeroth_data_blk);
-
+		if(addr < 0) goto error;
+		readDataByBlkId(addr, data_blk);
+		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromData(data_blk->data, offset, p_filedir);
+	
+	// todo: 优化成循环函数
 	}else if(hash_num < FD_FIRST_INDIR){
 		// 一次间接块  4
 		short int addr = temp_inode->addr[4];
+		if(addr < 0) goto error;
+		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
+		readDataByBlkId(addr, data_blk);
+		addr = retShortIntFromData(data_blk->data, offset);
+		readDataByBlkId(addr, data_blk);
+		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromData(data_blk->data, offset, p_filedir);
 	}else if(hash_num < FD_SECOND_INDIR){
 		// 二次间接块  5
 		short int addr = temp_inode->addr[5];
+		if(addr < 0) goto error;
+		readDataByBlkId(addr, data_blk);
+		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);	
+		addr = retShortIntFromData(data_blk->data, offset);
+		readDataByBlkId(addr, data_blk);
+		
+		offset = offset * FD_PER_BLK;
+		addr = retShortIntFromData(data_blk->data, offset);
+		readDataByBlkId(addr, data_blk);
+		
+		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromData(data_blk->data, offset, p_filedir);
+
 	}else if(hash_num < MAX_HASH_SIZE){
 		// 三次间接块  6
 		short int addr = temp_inode->addr[6];
+		if(addr < 0) goto error;
+		readDataByBlkId(addr, data_blk);
+		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);	
+		addr = retShortIntFromData(data_blk->data, offset);
+		readDataByBlkId(addr, data_blk);
+
+		offset = offset * FD_PER_BLK;
+		addr = retShortIntFromData(data_blk->data, offset);
+		readDataByBlkId(addr, data_blk);
+		
+		offset = offset * FD_PER_BLK;
+		addr = retShortIntFromData(data_blk->data, offset);
+		readDataByBlkId(addr, data_blk);
+		
+		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromData(data_blk->data, offset, p_filedir);
 
 	}else{
+		error:
+		printError("Get file dir but addr is <0!");
+		free(data_blk);
 		free(temp_inode);
 		return -1;
 	}
+	free(data_blk);
 	free(temp_inode);
 	return 0;
 }
@@ -223,6 +268,9 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 		// 采用哈希表的方式查找
 		int hash_num = hash(base_name);
 		// 根据hash_num和cur_i, 返回对应的块号
+		// if (strcmp(current->name, fileName) != 0) {
+        //     goto error;
+        // }
 		
 		free(result);
 	}
@@ -235,14 +283,14 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 }
 
 // 将char的data 转化为short int形式, 注意采用小端序编码
-short int retShortIntFromData(const char* data, int offset) {
+short int retShortIntFromData(const char* data,const int offset) {
     // 使用位运算将两个字节的数据合并成一个 short int
     short int result = ((uint16_t)data[offset + 1] << 8) | (uint16_t)data[offset];
     return result;
 }
 
 // 给定GDataBlock中char* 将data 解读成GFileDir
-void getFileDirFromData(const char* data, int offset, struct GFileDir * p_fd){
+void getFileDirFromData(const char* data,const int offset, struct GFileDir * p_fd){
 	memcpy(p_fd, &data[offset], sizeof(struct GFileDir));
 }
 
