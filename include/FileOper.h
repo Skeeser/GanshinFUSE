@@ -20,7 +20,7 @@ int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_filedir);
 
 
-int getInodeBlkByPath(const char * path, long *file_inode);
+int getInodeBlkByPath(const char * path, short int *file_inode);
 int getFileDirByPath(const char * path,struct GFileDir *attr);
 
 void fillStatByInode(struct GInode *inode, struct stat *st);

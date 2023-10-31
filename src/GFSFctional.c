@@ -24,14 +24,12 @@ int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 {
     (void) fi;
 	int res = 0;
-
-	
-
 	
 	struct GInode *file_inode = malloc(sizeof(struct GInode));
 	file_inode = NULL;
 
 	// 根据路径获取对应文件的inode
+	getInode
 
 	// 根据inode赋值给stbuf
 	

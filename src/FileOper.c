@@ -147,10 +147,18 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_fi
 
 // Inode相关函数
 // 根据路径, 获取inode, 
-int getInodeBlkByPath(const char * path, long *file_inode)
+int getInodeBlkByPath(const char * path, short int *file_inode)
 {
-	
-	
+	struct GFileDir * p_fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+	int ret = getFileDirByPath(path, p_fd);
+	if(ret != 0){
+		free(p_fd);
+		printError("getInodeBlkByPath : failed!");
+		return ret;
+	}
+	*file_inode = p_fd->nInodeBlock;
+	free(p_fd);
+	return 0;
 	return 0;
 }
 
