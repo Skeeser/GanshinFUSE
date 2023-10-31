@@ -6,8 +6,8 @@ Github: https://github.com/Skeeser/GanshinFUSE
 */
 #include "FileOper.h"
 
-// 根据块号, 读取文件数据
-int readDataByBlkId(long blk_id,struct GDataBlock *data_blk)
+// 根据块号, 读取文件数据GDataBlock
+int readDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 {
 	
 	// 读取文件
@@ -23,7 +23,12 @@ int readDataByBlkId(long blk_id,struct GDataBlock *data_blk)
 	fseek(fp, blk_id * FS_BLOCK_SIZE, SEEK_SET);
 	// 清空
 	memset(data_blk, 0, sizeof(struct GDataBlock));
-	fread(data_blk, sizeof(struct GDataBlock), 1 , fp);
+	if(fread(data_blk, sizeof(struct GDataBlock), 1 , fp) == 0){
+        printSuccess("Read data block success!");
+    }else{
+        printError("Read data block failed!");
+    }
+	
 	
     // 判断是否正确读取
     if(ferror(fp))
@@ -34,6 +39,59 @@ int readDataByBlkId(long blk_id,struct GDataBlock *data_blk)
 
 	fclose(fp);
     return 0;
+}
+// 根据块号, 读取Inode
+int readInodeByBlkId(short int blk_id,struct GInode *inode_blk)
+{
+	struct GDataBlock gblk;
+	int ret = readDataByBlkId(blk_id, &gblk);
+	if(ret != 0){
+		return ret;
+	}
+	// 复制内存 
+	memcpy(inode_blk, &gblk, sizeof(struct GInode));
+	return 0;
+}
+
+
+
+
+// 给定根据hash_num和cur_i, 返回对应的inode块号
+int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i)
+{
+
+}
+
+// 根据hash_num和cur_i, 返回对应的FileDir todo: 解决哈希冲突
+int getFileDirByHash(const int hash_num, const int cur_i, int *target_i)
+{
+	struct  GInode * temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// 获取当前inode号的inode
+	readInodeByBlkId(cur_i, temp_inode);
+	struct GDataBlock *zeroth_data_blk = malloc(sizeof(struct GDataBlock));
+
+	// todo: 解决哈希冲突
+	if(0 <= hash_num <= FD_ZEROTH_INDIR){
+		int i = hash_num / FD_PER_BLK;
+		short int addr = temp_inode->addr[i];
+		readDataByBlkId(addr, zeroth_data_blk);
+
+	}else if(hash_num < FD_FIRST_INDIR){
+		// 一次间接块  4
+		short int addr = temp_inode->addr[4];
+	}else if(hash_num < FD_SECOND_INDIR){
+		// 二次间接块  5
+		short int addr = temp_inode->addr[5];
+	}else if(hash_num < MAX_HASH_SIZE){
+		// 三次间接块  6
+		short int addr = temp_inode->addr[6];
+
+	}else{
+		free(temp_inode);
+		return -1;
+	}
+	free(temp_inode);
+	return 0;
 }
 
 // Inode相关函数
@@ -128,7 +186,7 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 	// 当前的目录或文件的inode
 	long cur_i = start_blk;
 	// 类型标志 -1表示都有可能, 2表示路径
-	int flag = -1;
+	// int flag = -1;
 
 	tmp_path++;
 	name_len--;
@@ -147,14 +205,14 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 		}
 		if(name_len < 0) break;
 		char* menu_flag = strchr(base_name,'/');
-		flag = -1;  // 重置标志
+		// flag = -1;  // 重置标志
 		
 		// 计算斜杠后的部分的长度
         size_t length =  menu_flag - base_name;
         // 创建一个新字符串来存储
         char *const result = (char*)malloc(sizeof(char) * (length + 1));
 		if(menu_flag != NULL){
-			flag = 2;  // 是个目录
+			// flag = 2;  // 是个目录
 			
         	strncpy(result, path, length);
         	result[length] = '\0'; // 添加字符串结束符
@@ -162,7 +220,9 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 		} 
 		
 		// 下面根据base_name和cur_i 查找 RD 并更新 cur_i
-			
+		// 采用哈希表的方式查找
+		int hash_num = hash(base_name);
+		// 根据hash_num和cur_i, 返回对应的块号
 		
 		free(result);
 	}
@@ -181,6 +241,11 @@ short int retShortIntFromData(const char* data, int offset) {
     return result;
 }
 
+// 给定GDataBlock中char* 将data 解读成GFileDir
+void getFileDirFromData(const char* data, int offset, struct GFileDir * p_fd){
+	memcpy(p_fd, &data[offset], sizeof(struct GFileDir));
+}
+
 // 根据inode, 获取该文件占据了多少块
 void getFileBlkNum(struct GInode *inode, int *blk_num)
 {
@@ -197,9 +262,9 @@ void getFileBlkNum(struct GInode *inode, int *blk_num)
 	}
 
 	// int ADDR_PER_BLK = MAX_DATA_IN_BLOCK / sizeof(short int);
-	struct GDataBlock *first_data_blk = malloc(sizeof(struct GSuperBlock));
-	struct GDataBlock *second_data_blk = malloc(sizeof(struct GSuperBlock));
-	struct GDataBlock *third_data_blk = malloc(sizeof(struct GSuperBlock));
+	struct GDataBlock *first_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *second_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *third_data_blk = malloc(sizeof(struct GDataBlock));
 
 	// 一次间接
 	short int first_Indir = inode->addr[4];

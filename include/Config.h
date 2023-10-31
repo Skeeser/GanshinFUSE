@@ -55,8 +55,17 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #define MAX_DATA_IN_BLOCK FS_BLOCK_SIZE-4
 #define FILE_SIZE 4096  // Byte
 
+// 定义文件名和扩展名
 # define MAX_FILENAME 8
 # define MAX_EXTENSION 3
+
+// 定义地址块
+#define FD_PER_BLK MAX_DATA_IN_BLOCK/sizeof(struct GFileDir)
+#define FD_ZEROTH_INDIR 4*FD_PER_BLK
+#define FD_FIRST_INDIR 4*FD_PER_BLK+FD_PER_BLK*FD_PER_BLK
+#define FD_SECOND_INDIR 4*FD_PER_BLK+FD_PER_BLK*FD_PER_BLK+FD_PER_BLK*FD_PER_BLK*FD_PER_BLK
+#define MAX_HASH_SIZE 4*FD_PER_BLK+FD_PER_BLK*FD_PER_BLK+\
+    FD_PER_BLK*FD_PER_BLK*FD_PER_BLK+FD_PER_BLK*FD_PER_BLK*FD_PER_BLK*FD_PER_BLK
 
 // 超级块结构体
 // 9 * 8 = 72 Byte
@@ -92,13 +101,14 @@ struct GInode
 
 
 // 记录文件信息的数据结构, 统一存放在目录文件里面
+// 40 Byte
 struct GFileDir {
     char fname[MAX_FILENAME + 1]; //文件名 
     char fext[MAX_EXTENSION + 1]; //扩展名
     size_t fsize; //文件大小（file size）
     long nMenuBlock; //目录块位置（where the first block is on disk）
     long nInodeBlock; // 该文件的inode块位置
-    int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory
+    int flag; //indicate type of file. 0:for unused; 1:for file; 2:for directory; -1:都有可能
 };
 
 // 文件内容存放用到的数据结构，大小为 512 bytes，占用1块磁盘块
