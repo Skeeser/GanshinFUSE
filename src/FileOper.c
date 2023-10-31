@@ -24,7 +24,7 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 	fseek(fp, blk_id * FS_BLOCK_SIZE, SEEK_SET);
 	// 清空
 	memset(data_blk, 0, sizeof(struct GDataBlock));
-	if(fread(data_blk, sizeof(struct GDataBlock), 1 , fp) == 0){
+	if(fread(data_blk, sizeof(struct GDataBlock), 1 , fp) > 0){
         printSuccess("getDataByBlkId: Read data block success!");
     }else{
         printError("getDataByBlkId: Read data block failed!");
@@ -48,13 +48,17 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 int getInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 {
 	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
+	struct GInode *temp_inode = malloc(sizeof(struct GInode));
 	int ret = getDataByBlkId(blk_id, gblk);
 	if(ret != 0){
 		free(gblk);
 		return ret;
 	}
 	// 复制内存 
-	memcpy(inode_blk, gblk, sizeof(struct GInode));
+	// error
+	temp_inode = (struct GInode *)gblk;
+	memcpy(inode_blk, temp_inode, sizeof(struct GInode));
+	free(temp_inode);
 	free(gblk);
 	return 0;
 }
@@ -211,13 +215,13 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 	struct GSuperBlock* sp_blk;
     // 将原本GDataBlock的数据转换成GSuperBlock
 	sp_blk = (struct GSuperBlock*) data_blk;
-	long start_blk;
-	start_blk = sp_blk->first_blk;
+	long start_inode;
+	start_inode = sp_blk->first_inode;
 
     printf("Super Block:\nfs_size=%ld, first_blk=%ld, datasize=%ld, first_inode=%ld, inode_area_size=%ld, fisrt_blk_of_inodebitmap=%ld, inodebitmap_size=%ld, first_blk_of_databitmap=%ld, databitmap_size=%ld\n",
        sp_blk->fs_size, sp_blk->first_blk, sp_blk->datasize, sp_blk->first_inode, sp_blk->inode_area_size, sp_blk->fisrt_blk_of_inodebitmap,
        sp_blk->inodebitmap_size, sp_blk->first_blk_of_databitmap, sp_blk->databitmap_size);
-	printf("start_blk:%ld\n",start_blk);
+	printf("start_inode:%ld\n",start_inode);
 
 	// 解析path
 	char *tmp_path;  
@@ -237,8 +241,8 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 	if (strcmp(tmp_path, "/") == 0) 
 	{
 		attr->flag = 2; // 2 menu
-		attr->nMenuBlock = start_blk;
-		attr->nInodeBlock = start_blk;
+		attr->nMenuBlock = start_inode;
+		attr->nInodeBlock = start_inode;
 		free(sp_blk);
 		printSuccess("getFileDirToAttr: this is a root menu");
 		return 0;
@@ -249,7 +253,7 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 	// 文件或目录的长度
 	int len = 0;
 	// 当前的目录或文件的inode
-	long cur_i = start_blk;
+	long cur_i = start_inode;
 	// 类型标志 -1表示都有可能, 2表示路径
 	// int flag = -1;
 
