@@ -59,11 +59,20 @@ int readInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 // 给定根据hash_num和cur_i, 返回对应的inode块号
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i)
 {
-
+	struct GFileDir * p_fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+	int ret = getFileDirByHash(hash_num, cur_i, p_fd);
+	if(ret != 0){
+		free(p_fd);
+		printError("getInodeBlkByHash : failed!");
+		return ret;
+	}
+	*target_i = p_fd->nInodeBlock;
+	free(p_fd);
+	return 0;
 }
 
 // 根据hash_num和cur_i, 返回对应的FileDir todo: 解决哈希冲突
-int getFileDirByHash(const int hash_num, const int cur_i, int *target_i, struct GFileDir * p_filedir)
+int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_filedir)
 {
 	struct  GInode * temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	// 获取当前inode号的inode
