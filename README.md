@@ -92,6 +92,21 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 
 <br>
 
+### 创建disk文件
+8MB大小
+```shell
+dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
+```
+  
+### 设置disk地址
+需要修改`~/GanshinFUSE/include/config.h` 中的  
+```c
+#define DISK_PATH "/home/keeser/GanshinFUSE/out/diskimg"
+```
+设置你的disk的绝对路径
+
+<br>
+
 ### 编译
 #### 设置debug 或者 release版本
 修改CMakeList.txt中的  

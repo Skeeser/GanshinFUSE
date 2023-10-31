@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
     fp = fopen(DISK_PATH, "r+");//打开文件
     if(fp == NULL){
         printError("Open disk file failed! The file may don't exits.");
-        printf("disk_path: %s", DISK_PATH);
+        printf("disk_path: %s\n", DISK_PATH);
         return 0;
     }
     printSuccess("Open disk file success!");
