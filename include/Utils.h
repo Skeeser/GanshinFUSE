@@ -11,8 +11,11 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Config.h"
 
 void printError(const char *str);
 void printSuccess(const char *str);
+
+int hash(const char* in_str);
 
 #endif
