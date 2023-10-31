@@ -72,6 +72,7 @@ Linux
 - gcc
 - libfuse
 - gtest (开发测试需要)
+- lldb (调试需要)
 
 <br>
 
@@ -93,12 +94,12 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 
 ### 编译
 #### 设置debug 或者 release版本
-修改CMakeList.txt中的
+修改CMakeList.txt中的  
 ```c
 option(USE_DEBUG "Build with debug flags" ON)
 ```
-debug版本--ON
-release版本--OFF
+debug版本--ON  
+release版本--OFF  
 
 <br>
 
@@ -114,8 +115,10 @@ make
 <br>
 
 ### 运行
-**在build文件夹下**
-
+#### 在build文件夹下
+```shell
+cd build/
+```
 
 #### 初始化
 
@@ -143,6 +146,7 @@ make
 
 ### 调试工具
 LLDB
+详细使用见[开发文档](doc/develop_log.md)
 
 <br>
 

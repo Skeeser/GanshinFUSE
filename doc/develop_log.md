@@ -49,27 +49,86 @@ cmake ..
 make
 sudo make install
 ```
+ 
+<br>
 
 ### 测试文件
-在test文件夹下
-由于要用到自己写的c库, 所以测试的代码要写上extern C
-所以先把c库编译成静态库, 再链接到测试的cpp
+在test文件夹下  
+由于要用到自己写的c库, 所以测试的代码要写上extern C  
+所以先把c库编译成静态库, 再链接到测试的cpp  
+ 
+<br>
+
+### 编写测试
+可以在原本的GanshinTest.cpp添加测试代码  
+如果需要添加别的测试文件, 则需要重新写cmakelist.txt
+
+<br>
+
+
+### 运行所有测试案例
+```shell
+cd build/
+./GanshinTest 
+```
+ 
+<br>
 
 ### 单独运行某个测试样例
 ```shell
+cd build/
 ./GanshinTest --gtest_filter=GFS_init.init
 ```
 
 <br>
 
 ## LLDB
+### 安装
+直接在vscode插件市场安装即可
+
+<br>
+
 ### 控制程序的版本debug or release
+修改CMakeList.txt中的
+```c
+option(USE_DEBUG "Build with debug flags" ON)
+```
+debug版本--ON  
+release版本--OFF  
+
+<br>
 
 ### 查看程序的版本debug or release
 ```shell
 readelf -S ./GanshinTest 
 ```
 有debug相关信息的就是debug版本
+
+<br>
+
+### launch.json 
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/build/GanshinTest",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
+```
+
+<br>
+
+### 常见问题
+Q: 为什么我设了断点没用
+A: 因为编译出来的不是debug版本, 更改cmakelist.txt
+---
 
 <br>
 
@@ -133,18 +192,6 @@ i节点, 根目录指向data区的一个块地址
 #### 根据文件名查找对应的文件的DR和inode块号
 采取哈希表的方式查找
 
-<br>
-
-## 文件操作功能封装(FileOper)
-### int readDataByBlkId(long blk_id,struct GDataBlock *data_blk);
-读取超级块, 然后把数据放在data_blk里
-
-### int getFileDirToAttr(const char * path,struct GFileDir *attr);
-根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
-#### 实现思路
-1. 读出超级块, 拿到相关数据
-2. 将超级块类型转换为GSuperBlock
-3. 解析path
 <br>
 
 ## 参考资料
