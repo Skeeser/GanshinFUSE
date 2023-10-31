@@ -92,23 +92,22 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 <br>
 
 ### 编译
-**release下编译**
-```shell
-cd ~/GanshinFUSE/
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release .. 
-make
+#### 设置debug 或者 release版本
+修改CMakeList.txt中的
+```c
+option(USE_DEBUG "Build with debug flags" ON)
 ```
+debug版本--ON
+release版本--OFF
 
 <br>
 
-**debug下编译**
+#### 执行编译
 ```shell
 cd ~/GanshinFUSE/
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug .. 
+cmake .. 
 make
 ```
 
@@ -141,6 +140,11 @@ make
 ```shell
 ./GanhsinTest
 ```
+
+### 调试工具
+LLDB
+
+<br>
 
 ## 使用指南
 - 注意依赖有没有装上

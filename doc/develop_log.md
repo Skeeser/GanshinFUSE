@@ -60,7 +60,16 @@ sudo make install
 ./GanshinTest --gtest_filter=GFS_init.init
 ```
 
+<br>
 
+## LLDB
+### 控制程序的版本debug or release
+
+### 查看程序的版本debug or release
+```shell
+readelf -S ./GanshinTest 
+```
+有debug相关信息的就是debug版本
 
 <br>
 

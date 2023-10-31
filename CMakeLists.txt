@@ -8,7 +8,7 @@ PROJECT(GanshinFUSE)
 SET(CMAKE_C_STANDARD 11)  # 设置c标准
 
 # 定义一个选项，用于控制生成何种类型的Makefile
-option(USE_DEBUG "Build with debug flags" OFF)
+option(USE_DEBUG "Build with debug flags" ON)
 
 # 在Debug模式下添加调试标志，优化标志，和gtest
 if(USE_DEBUG)
