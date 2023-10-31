@@ -86,9 +86,11 @@ struct GSuperBlock
 // 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
 // addr[5]是二次间接，addr[6]是三次间接。
 // 一个间接块最大可以存储 FS_BLOCK_SIZE / sizeof(short int) = 254块
+// S_IFDIR | 0666;//设置成目录,S_IFDIR和0666（8进制的文件权限掩码），这里进行或运算
+//  S_IFREG | 0666;//该文件是	一般文件
 struct GInode
 {
-    short int st_mode;       /* 权限，2字节 */
+    short int st_mode;       /* 权限，2字节 */  
     short int st_ino;        /* i-node号，2字节 */
     char st_nlink;           /* 连接数，1字节 */
     uid_t st_uid;            /* 拥有者的用户 ID ，4字节 */

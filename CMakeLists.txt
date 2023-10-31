@@ -13,9 +13,11 @@ option(USE_DEBUG "Build with debug flags" OFF)
 # 在Debug模式下添加调试标志，优化标志，和gtest
 if(USE_DEBUG)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
     set(CMAKE_BUILD_TYPE Debug)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
     set(CMAKE_BUILD_TYPE Release)
 endif()
 

@@ -44,7 +44,7 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 int getInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 {
 	struct GDataBlock gblk;
-	int ret = readDataByBlkId(blk_id, &gblk);
+	int ret = getDataByBlkId(blk_id, &gblk);
 	if(ret != 0){
 		return ret;
 	}
@@ -73,7 +73,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_fi
 {
 	struct  GInode * temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	// 获取当前inode号的inode
-	readInodeByBlkId(cur_i, temp_inode);
+	getInodeByBlkId(cur_i, temp_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 	
 
@@ -82,7 +82,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_fi
 		int i = hash_num / FD_PER_BLK;
 		short int addr = temp_inode->addr[i];
 		if(addr < 0) goto error;
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		getFileDirFromData(data_blk->data, offset, p_filedir);
 	
@@ -92,23 +92,23 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_fi
 		short int addr = temp_inode->addr[4];
 		if(addr < 0) goto error;
 		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		addr = retShortIntFromData(data_blk->data, offset);
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		getFileDirFromData(data_blk->data, offset, p_filedir);
 	}else if(hash_num < FD_SECOND_INDIR){
 		// 二次间接块  5
 		short int addr = temp_inode->addr[5];
 		if(addr < 0) goto error;
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);	
 		addr = retShortIntFromData(data_blk->data, offset);
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		
 		offset = offset * FD_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		getFileDirFromData(data_blk->data, offset, p_filedir);
@@ -117,18 +117,18 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_fi
 		// 三次间接块  6
 		short int addr = temp_inode->addr[6];
 		if(addr < 0) goto error;
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);	
 		addr = retShortIntFromData(data_blk->data, offset);
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 
 		offset = offset * FD_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		
 		offset = offset * FD_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
-		readDataByBlkId(addr, data_blk);
+		getDataByBlkId(addr, data_blk);
 		
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		getFileDirFromData(data_blk->data, offset, p_filedir);
@@ -192,7 +192,7 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 	data_blk = malloc(sizeof(struct GDataBlock));
 
 	// 读出超级块
-	if (readDataByBlkId(0, data_blk) == -1) 
+	if (getDataByBlkId(0, data_blk) == -1) 
 	{
 		printError("getFileDirToAttr: read super block failed!");
 		free(data_blk);	
@@ -358,16 +358,16 @@ void getFileBlkNum(struct GInode *inode, int *blk_num)
 	// 一次间接
 	short int first_Indir = inode->addr[4];
 	if(first_Indir >= 0){
-		readDataByBlkId(first_Indir, first_data_blk);
+		getDataByBlkId(first_Indir, first_data_blk);
 		ret_num += first_data_blk->size / sizeof(short int);
 	}
 
 	// 二次间接 
 	short int second_Indir = inode->addr[5];
 	if(second_Indir >= 0){
-		readDataByBlkId(second_Indir, second_data_blk);
+		getDataByBlkId(second_Indir, second_data_blk);
 		for(int i = 0; i < second_data_blk->size; i += sizeof(short int)){
-			readDataByBlkId(retShortIntFromData(second_data_blk->data, i), first_data_blk);
+			getDataByBlkId(retShortIntFromData(second_data_blk->data, i), first_data_blk);
 			ret_num += first_data_blk->size / sizeof(short int);
 		}
 	}
@@ -375,11 +375,11 @@ void getFileBlkNum(struct GInode *inode, int *blk_num)
 	// 三次间接
 	short int third_Indir = inode->addr[6];
 	if(third_Indir >= 0){
-		readDataByBlkId(third_Indir, third_data_blk);
+		getDataByBlkId(third_Indir, third_data_blk);
 		for(int i = 0; i < third_data_blk->size; i += sizeof(short int)){
-			readDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
+			getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
 			for(int i = 0; i < second_data_blk->size; i += sizeof(short int)){
-				readDataByBlkId(retShortIntFromData(second_data_blk->data, i), first_data_blk);
+				getDataByBlkId(retShortIntFromData(second_data_blk->data, i), first_data_blk);
 				ret_num += first_data_blk->size / sizeof(short int);
 			}
 		}
