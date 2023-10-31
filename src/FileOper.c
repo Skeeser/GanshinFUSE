@@ -7,7 +7,7 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "FileOper.h"
 
 // 根据块号, 读取文件数据GDataBlock
-int readDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
+int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 {
 	
 	// 读取文件
@@ -41,7 +41,7 @@ int readDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
     return 0;
 }
 // 根据块号, 读取Inode
-int readInodeByBlkId(short int blk_id,struct GInode *inode_blk)
+int getInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 {
 	struct GDataBlock gblk;
 	int ret = readDataByBlkId(blk_id, &gblk);
@@ -52,9 +52,6 @@ int readInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 	memcpy(inode_blk, &gblk, sizeof(struct GInode));
 	return 0;
 }
-
-
-
 
 // 给定根据hash_num和cur_i, 返回对应的inode块号
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i)
@@ -260,7 +257,6 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 		if(name_len < 0) break;
 		char* menu_flag = strchr(base_name,'/');
 		// flag = -1;  // 重置标志
-		
 		// 计算斜杠后的部分的长度
         size_t length =  menu_flag - base_name;
         // 创建一个新字符串来存储
@@ -276,19 +272,47 @@ int getFileDirByPath(const char * path,struct GFileDir *attr)
 		// 下面根据base_name和cur_i 查找 RD 并更新 cur_i
 		// 采用哈希表的方式查找
 		int hash_num = hash(base_name);
-		// 根据hash_num和cur_i, 返回对应的块号
-		// if (strcmp(current->name, fileName) != 0) {
-        //     goto error;
-        // }
+		// 根据hash_num和cur_i, 返回对应的GFileDir
+		struct GFileDir * p_fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+		if(getFileDirByHash(hash_num, cur_i, p_fd) != 0){
+			printError("getFileDirByPath: getFileDirByHash failed!");
+			goto error;
+		}
 		
+		// 分割扩展名
+		char * ret = strchr(base_name,'.');
+		// 如果没有 "."
+		if(ret == NULL){
+			if (strcmp(p_fd->fname, base_name) != 0) {
+            	goto error;
+        	}else{
+				cur_i = p_fd->nInodeBlock;
+				// memcpy(attr, p_fd, sizeof(struct GFileDir));
+			}
+		}else{  // 如果有 .
+			// 分割
+			ret = '\0';
+			char *fname = base_name;
+			char *fext = ++ret;
+			if (strcmp(p_fd->fname, fname) != 0 || strcmp(p_fd->fext, fext) != 0) {
+            	error:
+				free(p_fd);free(result);free(tmp_path);free(data_blk);
+				return -1;
+        	}else{
+				cur_i = p_fd->nInodeBlock;
+				memcpy(attr, p_fd, sizeof(struct GFileDir));
+			}
+		}
+		
+		free(p_fd);
 		free(result);
 	}
 	
 	
     free(tmp_path);
     free(data_blk);
-	
-	return -1;
+	printSuccess("getFileDirToAttr: success!");
+	return 0;
 }
 
 // 将char的data 转化为short int形式, 注意采用小端序编码
