@@ -12,10 +12,11 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 	
 	// 读取文件
     FILE *fp = NULL;
-    fp = fopen(DISK_PATH, "r+");//打开文件
+    fp = fopen(DISK_PATH, "r+"); //打开文件
     if(fp == NULL){
-        printError("Open disk file failed! The file may don't exits.");
-        return 0;
+        printError("getDataByBlkId: Open disk file failed! The file may don't exits.");
+        printf("disk_path: %s\n", DISK_PATH);
+		return -1;
     }
     // printSuccess("Open disk file success!");
 
@@ -24,16 +25,19 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 	// 清空
 	memset(data_blk, 0, sizeof(struct GDataBlock));
 	if(fread(data_blk, sizeof(struct GDataBlock), 1 , fp) == 0){
-        printSuccess("Read data block success!");
+        printSuccess("getDataByBlkId: Read data block success!");
     }else{
-        printError("Read data block failed!");
+        printError("getDataByBlkId: Read data block failed!");
+		fclose(fp);
+		return -1;
     }
 	
 	
     // 判断是否正确读取
     if(ferror(fp))
 	{
-		printError("Read disk file failed!");
+		printError("getDataByBlkId: Read disk file failed!");
+		fclose(fp);
         return -1;
 	}
 
@@ -43,13 +47,15 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 // 根据块号, 读取Inode
 int getInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 {
-	struct GDataBlock gblk;
-	int ret = getDataByBlkId(blk_id, &gblk);
+	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
+	int ret = getDataByBlkId(blk_id, gblk);
 	if(ret != 0){
+		free(gblk);
 		return ret;
 	}
 	// 复制内存 
-	memcpy(inode_blk, &gblk, sizeof(struct GInode));
+	memcpy(inode_blk, gblk, sizeof(struct GInode));
+	free(gblk);
 	return 0;
 }
 

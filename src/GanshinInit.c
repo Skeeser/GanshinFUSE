@@ -4,8 +4,6 @@ Email: 1326658417@qq.com
 Liense: GPL 2.0
 Github: https://github.com/Skeeser/GanshinFUSE
 */
-
-
 #include "../include/GanshinInit.h"
 
 // 将文件系统的相关信息写入超级块
@@ -145,7 +143,7 @@ static void initInode(FILE *const fp)
     if (currentTime == (time_t)-1) {
         printError("Inode get time failed!");
     }else {
-        printError("Inode get time success!");
+        printSuccess("Inode get time success!");
     }
     root->st_atim = currentTime;
 
@@ -171,6 +169,7 @@ int main(int argc, char *argv[])
     fp = fopen(DISK_PATH, "r+");//打开文件
     if(fp == NULL){
         printError("Open disk file failed! The file may don't exits.");
+        printf("disk_path: %s", DISK_PATH);
         return 0;
     }
     printSuccess("Open disk file success!");
