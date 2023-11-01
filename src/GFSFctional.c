@@ -24,8 +24,7 @@ int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 {
     (void) fi;
 	int res = 0;
-	struct GInode *file_inode = malloc(sizeof(struct GInode));
-	file_inode = NULL;
+	struct GInode *file_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	short int *inode_id;
 	*inode_id = 0;
 

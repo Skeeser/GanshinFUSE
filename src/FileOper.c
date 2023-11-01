@@ -48,7 +48,7 @@ int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk)
 int getInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 {
 	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
-	struct GInode *temp_inode = malloc(sizeof(struct GInode));
+	//struct GInode *temp_inode = malloc(sizeof(struct GInode));
 	int ret = getDataByBlkId(blk_id, gblk);
 	if(ret != 0){
 		free(gblk);
@@ -56,9 +56,11 @@ int getInodeByBlkId(short int blk_id,struct GInode *inode_blk)
 	}
 	// 复制内存 
 	// error
-	temp_inode = (struct GInode *)gblk;
-	memcpy(inode_blk, temp_inode, sizeof(struct GInode));
-	free(temp_inode);
+	//temp_inode = (struct GInode *)gblk;
+	
+
+	memcpy(inode_blk, (struct GInode *)gblk, sizeof(struct GInode));
+	//free(temp_inode);
 	free(gblk);
 	return 0;
 }
