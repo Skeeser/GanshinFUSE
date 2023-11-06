@@ -189,23 +189,33 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	getInodeByBlkId(cur_i, temp_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 
-	// 地址未被创建
-
-	// 地址已被创建
-
 	if (0 <= hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
 		short int addr = temp_inode->addr[i];
+
+		// 地址未被创建
 		if (addr < 0)
-			goto error;
-		getDataByBlkId(addr, data_blk);
-		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		{
+			// 根据data bitmap, 找到空闲块
+			// 将块号赋值给原本未被创建的addr的位置
+			// 将该数据块的file dir中的size全部初始化为0
+		}
+		// 地址已被创建
+		else
+		{
+			getDataByBlkId(addr, data_blk);
+			int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+			getFileDirFromDataBlk(data_blk, offset, p_filedir);
+		}
 
-		getFileDirFromDataBlk(data_blk, offset, p_filedir);
-
-		// todo: 优化成循环函数
-	}
+		// 目录的inode中增加st_size
+		// 更新目录的inode st_atim
+		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
+		// 初始化新的inode
+		// 更新inode bitmap
+		// 将file dir写入到data blk中
+		}
 	else if (hash_num < FD_FIRST_INDIR)
 	{
 		// 一次间接块  4
@@ -925,22 +935,6 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 		printError("createFileByPath: create file dir failed!");
 		goto error;
 	}
-
-	// 当前块放不下目录内容
-
-	// 为父目录文件新增一个块
-
-	// 块容量足够，直接加size
-
-	// 给新建的file_directory赋值
-
-	// 找到空闲块作为起始块
-
-	// 为新建的文件申请一个空闲块
-
-	// 将要创建的文件或目录信息写入上层目录中
-
-	// 文件起始块内容为空
 
 	printSuccess("createFileByPath: success!");
 
