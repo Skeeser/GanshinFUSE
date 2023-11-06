@@ -176,6 +176,7 @@ int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct 
 	// 增加大小
 	data_blk->size += sizeof(struct GFileDir);
 	// 写入
+	memcpy(&(data_blk->data[offset]), p_fd, sizeof(struct GFileDir));
 }
 
 // 根据哈希值在menu中创建file dir
