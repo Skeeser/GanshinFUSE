@@ -28,8 +28,10 @@ short int retShortIntFromData(const char *data, const int offset);
 
 // FileDir
 int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir);
+int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir);
 int getFileDirByPath(const char *path, struct GFileDir *attr);
-void getFileDirFromData(const char *data, const int offset, struct GFileDir *p_fd);
+void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, struct GFileDir *p_fd);
+int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk);
 
 // File
 void getFileBlkNum(struct GInode *inode, int *blk_num);

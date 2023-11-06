@@ -108,7 +108,7 @@ struct GFileDir
 {
     char fname[MAX_FILENAME + 1]; // 文件名
     char fext[MAX_EXTENSION + 1]; // 扩展名
-    size_t fsize;                 // 文件大小（file size）
+    size_t fsize;                 // 文件大小（file size）Byte
     long nMenuInode;              // 目录Inode块位置（where the first block is on disk）
     long nInodeBlock;             // 该文件的inode块位置
     int flag;                     // indicate type of file. 0:for unused; 1:for file; 2:for directory; -1:都有可能

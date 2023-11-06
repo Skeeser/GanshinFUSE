@@ -84,7 +84,7 @@ int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i)
 	return 0;
 }
 
-// 根据hash_num和cur_i, 返回对应的FileDir todo: 解决哈希冲突
+// 根据hash_num和cur_i, 返回对应的FileDir  todo: 解决哈希冲突
 int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
 {
 	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
@@ -92,7 +92,6 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 	getInodeByBlkId(cur_i, temp_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 
-	// todo: 解决哈希冲突
 	if (0 <= hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
@@ -101,7 +100,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 			goto error;
 		getDataByBlkId(addr, data_blk);
 		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromData(data_blk->data, offset, p_filedir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
 
 		// todo: 优化成循环函数
 	}
@@ -116,7 +115,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromData(data_blk->data, offset, p_filedir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
 	}
 	else if (hash_num < FD_SECOND_INDIR)
 	{
@@ -134,7 +133,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		getDataByBlkId(addr, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromData(data_blk->data, offset, p_filedir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
 	}
 	else if (hash_num < MAX_HASH_SIZE)
 	{
@@ -156,7 +155,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		getDataByBlkId(addr, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromData(data_blk->data, offset, p_filedir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
 	}
 	else
 	{
@@ -169,6 +168,107 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 	free(data_blk);
 	free(temp_inode);
 	return 0;
+}
+
+// 将filedir写入到GDataBlock的data中
+int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk)
+{
+	// 增加大小
+	data_blk->size += sizeof(struct GFileDir);
+	// 写入
+}
+
+// 根据哈希值在menu中创建file dir
+int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
+{
+	int ret = 0;
+
+	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// 获取当前inode号的inode
+	getInodeByBlkId(cur_i, temp_inode);
+	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
+
+	// 地址未被创建
+
+	// 地址已被创建
+
+	if (0 <= hash_num < FD_ZEROTH_INDIR)
+	{
+		int i = hash_num / FD_PER_BLK;
+		short int addr = temp_inode->addr[i];
+		if (addr < 0)
+			goto error;
+		getDataByBlkId(addr, data_blk);
+		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+
+		// todo: 优化成循环函数
+	}
+	else if (hash_num < FD_FIRST_INDIR)
+	{
+		// 一次间接块  4
+		short int addr = temp_inode->addr[4];
+		if (addr < 0)
+			goto error;
+		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
+		getDataByBlkId(addr, data_blk);
+		addr = retShortIntFromData(data_blk->data, offset);
+		getDataByBlkId(addr, data_blk);
+		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+	}
+	else if (hash_num < FD_SECOND_INDIR)
+	{
+		// 二次间接块  5
+		short int addr = temp_inode->addr[5];
+		if (addr < 0)
+			goto error;
+		getDataByBlkId(addr, data_blk);
+		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);
+		addr = retShortIntFromData(data_blk->data, offset);
+		getDataByBlkId(addr, data_blk);
+
+		offset = offset * FD_PER_BLK;
+		addr = retShortIntFromData(data_blk->data, offset);
+		getDataByBlkId(addr, data_blk);
+
+		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+	}
+	else if (hash_num < MAX_HASH_SIZE)
+	{
+		// 三次间接块  6
+		short int addr = temp_inode->addr[6];
+		if (addr < 0)
+			goto error;
+		getDataByBlkId(addr, data_blk);
+		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);
+		addr = retShortIntFromData(data_blk->data, offset);
+		getDataByBlkId(addr, data_blk);
+
+		offset = offset * FD_PER_BLK;
+		addr = retShortIntFromData(data_blk->data, offset);
+		getDataByBlkId(addr, data_blk);
+
+		offset = offset * FD_PER_BLK;
+		addr = retShortIntFromData(data_blk->data, offset);
+		getDataByBlkId(addr, data_blk);
+
+		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+	}
+	else
+	{
+	error:
+		printf("getFileDirByHash: the file may be not exited.\n");
+		free(data_blk);
+		free(temp_inode);
+		return -1;
+	}
+	free(data_blk);
+	free(temp_inode);
+	return ret;
 }
 
 // Inode相关函数
@@ -375,9 +475,9 @@ short int retShortIntFromData(const char *data, const int offset)
 }
 
 // 给定GDataBlock中char* 将data 解读成GFileDir
-void getFileDirFromData(const char *data, const int offset, struct GFileDir *p_fd)
+void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, struct GFileDir *p_fd)
 {
-	memcpy(p_fd, &data[offset], sizeof(struct GFileDir));
+	memcpy(p_fd, &(data_blk->data[offset]), sizeof(struct GFileDir));
 }
 
 // 根据inode, 获取该文件占据了多少块
@@ -806,12 +906,26 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 		goto error;
 	}
 
+	// 不存在, 则创建新的
 	int hash_num = hash(fall_name);
 
-	// 根据哈希值创建文件
-	getFileDirByHash(hash_num, menu_inode_num, file_dir);
+	// 赋值file_dir
+	memcpy(file_dir->fname, fname, strlen(fname));
+	memcpy(file_dir->fext, fext, strlen(fext));
+	// 文件大小初始化为0
+	file_dir->fsize = 0;
+	file_dir->nMenuInode = menu_inode_num;
+	file_dir->nInodeBlock = -1;
+	file_dir->flag = file_type;
 
-		// 当前块放不下目录内容
+	// 根据哈希值在目录创建filedir
+	if ((ret = createFileDirByHash(hash_num, menu_inode_num, file_dir)) != 0)
+	{
+		printError("createFileByPath: create file dir failed!");
+		goto error;
+	}
+
+	// 当前块放不下目录内容
 
 	// 为父目录文件新增一个块
 
