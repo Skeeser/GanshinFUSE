@@ -173,10 +173,10 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 
 // Inode相关函数
 // 根据路径, 获取inode,
-int getInodeBlkByPath(const char *path, short int *file_inode, enum GTYPE file_type)
+int getInodeBlkByPath(const char *path, short int *file_inode)
 {
 	struct GFileDir *p_fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
-	int ret = getFileDirByPath(path, p_fd, file_type);
+	int ret = getFileDirByPath(path, p_fd);
 	if (ret != 0)
 	{
 		free(p_fd);
@@ -185,7 +185,6 @@ int getInodeBlkByPath(const char *path, short int *file_inode, enum GTYPE file_t
 	}
 	*file_inode = p_fd->nInodeBlock;
 	free(p_fd);
-	return 0;
 	return 0;
 }
 
@@ -211,7 +210,7 @@ int checkFilePath(const char *path)
 }
 
 // 根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
-int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_type)
+int getFileDirByPath(const char *path, struct GFileDir *attr)
 {
 	// 获取磁盘根目录块的位置
 	printSuccess("Get File Dir To Attr Start!");
@@ -262,6 +261,7 @@ int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_ty
 	// 如果路径为根目录路径
 	if (strcmp(tmp_path, "/") == 0)
 	{
+		ret = 0;
 		attr->flag = 2; // 2 menu
 		attr->nMenuInode = start_inode;
 		attr->nInodeBlock = start_inode;
@@ -312,7 +312,7 @@ int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_ty
 
 		// 下面根据base_name和cur_i 查找 RD 并更新 cur_i
 		// 采用哈希表的方式查找
-		int hash_num = hash(base_name, );
+		int hash_num = hash(base_name);
 		// 根据hash_num和cur_i, 返回对应的GFileDir
 		struct GFileDir *p_fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 		if (getFileDirByHash(hash_num, cur_i, p_fd) != 0)
@@ -330,7 +330,7 @@ int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_ty
 			// 如果没有 "."
 			if (ret == NULL)
 			{
-				if (strcmp(p_fd->fname, base_name) != 0 || p_fd->flag == file_type)
+				if (strcmp(p_fd->fname, base_name) != 0 || p_fd->flag != 0)
 					goto error;
 				else
 					memcpy(attr, p_fd, sizeof(struct GFileDir));
@@ -341,12 +341,12 @@ int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_ty
 				*ret = '\0';
 				char *fname = base_name;
 				char *fext = ++ret;
-				if (strcmp(p_fd->fname, fname) != 0 || strcmp(p_fd->fext, fext) != 0 || p_fd->flag == file_type)
+				if (strcmp(p_fd->fname, fname) != 0 || strcmp(p_fd->fext, fext) != 0 || p_fd->flag != 0)
 				{
 				error:
 					free(p_fd);
-					free(tmp_path);
 					free(data_blk);
+					free(free_tmp_path);
 					return -1;
 				}
 				else
@@ -360,7 +360,7 @@ int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_ty
 		free(p_fd);
 	}
 
-	free(tmp_path);
+	free(free_tmp_path);
 	free(data_blk);
 	printSuccess("getFileDirToAttr: success!");
 	return 0;
@@ -633,14 +633,20 @@ int checkFileFext(const char *fext)
 }
 
 // 根据路径和文件类型, 划分文件名, 拓展名和剩下的路径
-int divideFileNameByPath(const char *path, char *fname, char *fext, char *remain_path, enum GTYPE file_type)
+int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_name, char *remain_path, enum GTYPE file_type)
 {
+
 	int ret = 0;
 	// 解析path
 	char *tmp_path;
 	char *free_tmp_path;
 	tmp_path = strdup(path);
 	free_tmp_path = tmp_path;
+	// 清空字符串
+	memset(fname, '\0', strlen(fname));
+	memset(fext, '\0', strlen(fext));
+	memset(fall_name, '\0', strlen(fall_name));
+	memset(remain_path, '\0', strlen(remain_path));
 
 	// 检查路径
 	ret = checkFilePath(tmp_path);
@@ -701,8 +707,14 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *remain
 
 		if (if_final == 1)
 		{
+			strncpy(fall_name, base_name, strlen(base_name));
 			// 取出剩余路径
 			strncpy(remain_path, path, base_name - free_tmp_path - 1);
+			// 如果剩余路径为空, 说明为根目录
+			if (strcmp(remain_path, "") == 0)
+			{
+				strncpy(remain_path, path, base_name - free_tmp_path);
+			}
 
 			// 分割扩展名
 			char *dot_ret = strchr(base_name, '.');
@@ -711,8 +723,7 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *remain
 			{
 				if (checkFileFname(base_name) == 0)
 				{
-					memcpy(fname, base_name, length);
-					memset(fext, '\0', strlen(fext));
+					memcpy(fname, base_name, length + 1);
 				}
 				else
 				{
@@ -763,6 +774,7 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 	long *par_menu_blk;
 
 	int ret = 0;
+	short int menu_inode_num = 0;
 	// 文件名和扩展名
 	char *fname = (char *)malloc(MAX_FILENAME * sizeof(char));
 	char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
@@ -772,106 +784,48 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 	struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 
-	// 获取文件名, 扩展名, 剩余路径
-	if ((ret = divideFileNameByPath(path, fname, fext, remain_path, file_type)) != 0)
+	// 获取文件名, 扩展名, 全名, 剩余路径
+	if ((ret = divideFileNameByPath(path, fname, fext, fall_name, remain_path, file_type)) != 0)
 	{
 		printError("createFileByPath: divide file name failed!");
 		goto error;
 	}
 
 	// 获取parent menu的inode
-	if ((ret = getInodeBlkByPath(remain_path, menu_inode, file_type)) != 0)
+	if ((ret = getInodeBlkByPath(remain_path, &menu_inode_num)) != 0)
 	{
 		printError("createFileByPath: get Menu Inode Blk failed!");
 		goto error;
 	}
 
 	// 检查该文件或目录是否已经存在
-	if ((ret = getFileDirByPath(path, file_dir, file_type)) == 0)
+	if ((ret = getFileDirByPath(path, file_dir)) == 0)
 	{
+		ret = -1;
 		printError("createFileByPath: the file already exit.");
 		goto error;
 	}
 
-	// 计算哈希
-	strncpy(fall_name, path + strlen(remain_path) + 1, strlen(path) - strlen(remain_path) - 1);
-	print("allname%s", fall_name);
-	hash
+	int hash_num = hash(fall_name);
 
-		file_dir += offset / sizeof(struct file_directory);
-	long *tmp = malloc(sizeof(long));
-	// 假如exist_check函数里面并没有改变pos的值，那么说明flag!=0
-	if (pos == data_blk->size)
-	{
-		printf("create_file_dir:enlarge_blk开始\n\n");
+	// 根据哈希值创建文件
+	getFileDirByHash(hash_num, menu_inode_num, file_dir);
+
 		// 当前块放不下目录内容
-		if (data_blk->size > MAX_DATA_IN_BLOCK)
-		{
-			printf("create_file_dir:当前块放不下文件，要enlarge_blk\n\n");
-			// 为父目录文件新增一个块
-			if ((res = enlarge_blk(par_dir_blk, file_dir, data_blk, tmp, m, n, flag)))
-			{
-				free(data_blk);
-				free(file_dir);
-				free(m);
-				free(n);
-				printf("错误：create_file_dir:enlarge_blk出错\n\n");
-				return res;
-			}
-			free(data_blk);
-			free(file_dir);
-			free(m);
-			free(n);
-			return 0;
-		}
-		else
-		{ // 块容量足够，直接加size
-			data_blk->size += sizeof(struct file_directory);
-		}
-	}
-	else
-	{ // flag=0
-		printf("create_file_dir:flag为0\n\n");
-		offset = 0;
-		file_dir = (struct file_directory *)data_blk->data;
-		while (offset < pos)
-			file_dir++;
-	}
+
+	// 为父目录文件新增一个块
+
+	// 块容量足够，直接加size
+
 	// 给新建的file_directory赋值
-	strcpy(file_dir->fname, m);
-	if (flag == 1 && *n != '\0')
-		strcpy(file_dir->fext, n);
-	file_dir->fsize = 0;
-	file_dir->flag = flag;
+
 	// 找到空闲块作为起始块
 
 	// 为新建的文件申请一个空闲块
-	if ((res = get_empty_blk(1, tmp)) == 1)
-		file_dir->nStartBlock = *tmp;
-	else
-	{
-		printf("错误：create_file_dir：为新建文件申请数据块时失败，函数结束返回\n\n");
-		free(data_blk);
-		free(file_dir);
-		free(m);
-		free(n);
-		return -errno;
-	}
-	printf("tmp=%ld\n\n", *tmp);
-	free(tmp);
+
 	// 将要创建的文件或目录信息写入上层目录中
-	write_data_block(par_dir_blk, data_blk);
-	data_blk->size = 0;
-	data_blk->nNextBlock = -1;
-	strcpy(data_blk->data, "\0");
 
 	// 文件起始块内容为空
-	write_data_block(file_dir->nStartBlock, data_blk);
-
-	printf("m=%s,n=%s\n\n", m, n);
-	free(data_blk);
-	free(m);
-	free(n);
 
 	printSuccess("createFileByPath: success!");
 

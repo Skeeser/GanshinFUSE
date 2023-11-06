@@ -20,7 +20,7 @@ int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk);
 // Inode
 int getInodeByBlkId(short int blk_id, struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
-int getInodeBlkByPath(const char *path, short int *file_inode, enum GTYPE file_type);
+int getInodeBlkByPath(const char *path, short int *file_inode);
 
 // Utils
 void fillStatByInode(struct GInode *inode, struct stat *st);
@@ -28,7 +28,7 @@ short int retShortIntFromData(const char *data, const int offset);
 
 // FileDir
 int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir);
-int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_type);
+int getFileDirByPath(const char *path, struct GFileDir *attr);
 void getFileDirFromData(const char *data, const int offset, struct GFileDir *p_fd);
 
 // File
@@ -36,6 +36,6 @@ void getFileBlkNum(struct GInode *inode, int *blk_num);
 int createFileByPath(const char *path, enum GTYPE file_type);
 int checkFileFname(const char *fname);
 int checkFileFext(const char *fext);
-int divideFileNameByPath(const char *path, char *fname, char *fext, char *remain_path, enum GTYPE file_type);
+int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_name, char *remain_path, enum GTYPE file_type);
 
 #endif

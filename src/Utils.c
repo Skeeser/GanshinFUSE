@@ -37,7 +37,7 @@ FileDir per Block  FD_PER_BLK = 508 / 40 = 12
 // BKDRHash unsigned int seed = 131; // 31 131 1313 13131 131313 etc..
 
 // flag取决于是文件还是目录
-int hash(const char *in_str, enum GTYPE file_type)
+int hash(const char *in_str)
 {
     int hash = 0;
     unsigned int seed = 31;

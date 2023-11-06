@@ -30,12 +30,13 @@ TEST(FILE, divideFile)
     char *fname = (char *)malloc(MAX_FILENAME * sizeof(char));
     char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
     char *remain_path = (char *)malloc(MAX_PATH_LENGTH * sizeof(char));
-    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, remain_path, GFILE);
+    char *fall_name = (char *)malloc((MAX_EXTENSION + MAX_FILENAME) * sizeof(char));
+    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, remain_path, fall_name, GFILE);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(fname, "ok");
     ASSERT_STRCASEEQ(fext, "jpg");
     ASSERT_STRCASEEQ(remain_path, "/etc/tess");
-    ret = divideFileNameByPath("/etc/enaf/hadad/", fname, fext, remain_path, GDIRECTORY);
+    ret = divideFileNameByPath("/etc/enaf/hadad/", fname, fext, remain_path, fall_name, GDIRECTORY);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(fname, "hadad");
     ASSERT_STRCASEEQ(fext, "");
@@ -44,6 +45,13 @@ TEST(FILE, divideFile)
     free(fname);
     free(fext);
     free(remain_path);
+    free(fall_name);
+}
+
+TEST(FILE, createFile)
+{
+    int ret = createFileByPath("/etc/", GDIRECTORY);
+    ASSERT_EQ(ret, 0);
 }
 
 int main(int argc, char *argv[])
