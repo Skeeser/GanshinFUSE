@@ -639,7 +639,9 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, enum GTYPE f
 	int ret = 0;
 	// 解析path
 	char *tmp_path;
+	char *free_tmp_path;
 	tmp_path = strdup(path);
+	free_tmp_path = tmp_path;
 
 	// 检查路径
 	ret = checkFilePath(tmp_path);
@@ -671,6 +673,8 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, enum GTYPE f
 
 	while (1)
 	{
+		if (name_len < 0)
+			break;
 		base_name = tmp_path;
 		// 循环得到每一级的目录
 		for (len = 0; --name_len >= 0; len++)
@@ -679,29 +683,15 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, enum GTYPE f
 			if (c == '/')
 				break;
 		}
-		if (name_len < 0)
-			break;
 		char *menu_flag = strchr(base_name, '/');
 		size_t length = 0;
 		if (menu_flag != NULL)
-		{
-			// flag = 2;  // 是个目录
-			// // 计算斜杠后的部分的长度
-			// length =  menu_flag - base_name;
-			// // 创建一个新字符串来存储
-			// char *const result = (char*)malloc(sizeof(char) * (length + 1));
-			// strncpy(result, path, length);
-			// result[length] = '\0'; // 添加字符串结束符
-			// base_name = result;
 			*menu_flag = '\0';
-		}
 		else
-		{
-
 			if_final = 1;
-		}
+
 		length = strlen(base_name);
-		printf("basename: %s long : %ld\n", base_name, length);
+		// printf("basename: %s long : %ld\n", base_name, length);
 
 		if (if_final == 1)
 		{
@@ -725,7 +715,7 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, enum GTYPE f
 			{
 				// 如果有 .
 				// 分割
-				dot_ret = '\0';
+				*dot_ret = '\0';
 				char *tmp_name = base_name;
 				char *tmp_ext = ++dot_ret;
 				if (checkFileFname(tmp_name) == 0 && checkFileFext(tmp_ext) == 0)
@@ -748,10 +738,10 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, enum GTYPE f
 		}
 	}
 
-	printSuccess("getFileDirToAttr: success!");
+	printSuccess("divideFileNameByPath: success!");
 
 error:
-	free(tmp_path);
+	free(free_tmp_path);
 	return ret;
 }
 

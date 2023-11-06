@@ -23,6 +23,7 @@ TEST(GFS, getattr)
     free(st);
 }
 
+// 测试分离文件名函数
 TEST(FILE, divideFile)
 {
     // 文件名和扩展名
