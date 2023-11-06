@@ -12,30 +12,30 @@ Github: https://github.com/Skeeser/GanshinFUSE
 
 // 规范函数名称, 作用和返回值, 默认返回0为成功
 // path
-int checkFilePath(const char * path);
+int checkFilePath(const char *path);
 
 // Data
-int getDataByBlkId(short int blk_id,struct GDataBlock *data_blk);
+int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk);
 
 // Inode
-int getInodeByBlkId(short int blk_id,struct GInode *inode_blk);
+int getInodeByBlkId(short int blk_id, struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
-int getInodeBlkByPath(const char * path, short int *file_inode);
+int getInodeBlkByPath(const char *path, short int *file_inode, enum GTYPE file_type);
 
 // Utils
 void fillStatByInode(struct GInode *inode, struct stat *st);
-short int retShortIntFromData(const char* data,const int offset);
+short int retShortIntFromData(const char *data, const int offset);
 
 // FileDir
-int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir * p_filedir);
-int getFileDirByPath(const char * path,struct GFileDir *attr);
-void getFileDirFromData(const char* data,const int offset, struct GFileDir * p_fd);
+int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir);
+int getFileDirByPath(const char *path, struct GFileDir *attr, enum GTYPE file_type);
+void getFileDirFromData(const char *data, const int offset, struct GFileDir *p_fd);
 
 // File
 void getFileBlkNum(struct GInode *inode, int *blk_num);
-int createFileByPath(const char * path,enum GTYPE file_type);
-int checkFileFname(const char * fname);
-int checkFileFext(const char * fext);
-int divideFileNameByPath(const char * path, char * fname, char * fext, enum GTYPE file_type);
+int createFileByPath(const char *path, enum GTYPE file_type);
+int checkFileFname(const char *fname);
+int checkFileFext(const char *fext);
+int divideFileNameByPath(const char *path, char *fname, char *fext, char *remain_path, enum GTYPE file_type);
 
 #endif

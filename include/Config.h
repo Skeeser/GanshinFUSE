@@ -57,6 +57,9 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #define MAX_FILENAME 8
 #define MAX_EXTENSION 3
 
+// 定义最大路径长度
+#define MAX_PATH_LENGTH 255
+
 // 定义地址块
 #define FD_PER_BLK MAX_DATA_IN_BLOCK / sizeof(struct GFileDir)
 #define FD_ZEROTH_INDIR 4 * FD_PER_BLK
@@ -106,7 +109,7 @@ struct GFileDir
     char fname[MAX_FILENAME + 1]; // 文件名
     char fext[MAX_EXTENSION + 1]; // 扩展名
     size_t fsize;                 // 文件大小（file size）
-    long nMenuInodeBlock;         // 目录Inode块位置（where the first block is on disk）
+    long nMenuInode;              // 目录Inode块位置（where the first block is on disk）
     long nInodeBlock;             // 该文件的inode块位置
     int flag;                     // indicate type of file. 0:for unused; 1:for file; 2:for directory; -1:都有可能
 };

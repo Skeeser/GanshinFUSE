@@ -29,13 +29,21 @@ TEST(FILE, divideFile)
     // 文件名和扩展名
     char *fname = (char *)malloc(MAX_FILENAME * sizeof(char));
     char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
-    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, GFILE);
+    char *remain_path = (char *)malloc(MAX_PATH_LENGTH * sizeof(char));
+    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, remain_path, GFILE);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(fname, "ok");
     ASSERT_STRCASEEQ(fext, "jpg");
+    ASSERT_STRCASEEQ(remain_path, "/etc/tess");
+    ret = divideFileNameByPath("/etc/enaf/hadad/", fname, fext, remain_path, GDIRECTORY);
+    ASSERT_EQ(ret, 0);
+    ASSERT_STRCASEEQ(fname, "hadad");
+    ASSERT_STRCASEEQ(fext, "");
+    ASSERT_STRCASEEQ(remain_path, "/etc/enaf");
 
     free(fname);
     free(fext);
+    free(remain_path);
 }
 
 int main(int argc, char *argv[])
