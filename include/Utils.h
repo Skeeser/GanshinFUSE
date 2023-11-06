@@ -16,6 +16,6 @@ Github: https://github.com/Skeeser/GanshinFUSE
 void printError(const char *str);
 void printSuccess(const char *str);
 
-int hash(const char* in_str);
+int hash(const char *in_str);
 
 #endif
