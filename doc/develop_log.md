@@ -188,10 +188,20 @@ i节点, 根目录指向data区的一个块地址
 ### 初始化GFS_init
 暂时没有什么要初始化操作的
 
+<br>
+
 ### 获取文件属性GFS_getattr
 要利用到Config.h定义的GFileData数据结构
+
+<br>
+
 #### 根据文件名查找对应的文件的DR和inode块号
 采取哈希表的方式查找
+
+<br>
+
+### 创建文件GFS_mknod
+
 
 <br>
 

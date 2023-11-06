@@ -1,6 +1,7 @@
 extern "C"
 {
 #include "GFSFctional.h"
+#include "FileOper.h"
 }
 #include "gtest/gtest.h"
 
@@ -20,6 +21,20 @@ TEST(GFS, getattr)
     ASSERT_EQ(st->st_nlink, 1);
     ASSERT_EQ(st->st_mode, 0755);
     free(st);
+}
+
+TEST(FILE, divideFile)
+{
+    // 文件名和扩展名
+    char *fname = (char *)malloc(MAX_FILENAME * sizeof(char));
+    char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
+    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, GFILE);
+    ASSERT_EQ(ret, 0);
+    ASSERT_STRCASEEQ(fname, "ok");
+    ASSERT_STRCASEEQ(fext, "jpg");
+
+    free(fname);
+    free(fext);
 }
 
 int main(int argc, char *argv[])

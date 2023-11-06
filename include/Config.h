@@ -106,7 +106,7 @@ struct GFileDir
     char fname[MAX_FILENAME + 1]; // 文件名
     char fext[MAX_EXTENSION + 1]; // 扩展名
     size_t fsize;                 // 文件大小（file size）
-    long nMenuBlock;              // 目录块位置（where the first block is on disk）
+    long nMenuInodeBlock;         // 目录Inode块位置（where the first block is on disk）
     long nInodeBlock;             // 该文件的inode块位置
     int flag;                     // indicate type of file. 0:for unused; 1:for file; 2:for directory; -1:都有可能
 };
@@ -116,6 +116,13 @@ struct GDataBlock
 {
     size_t size;                  // 文件的数据部分使用了这个块里面的多少Bytes
     char data[MAX_DATA_IN_BLOCK]; // And all the rest of the space in the block can be used for actual data storage.
+};
+
+// 区分文件还是目录
+enum GTYPE
+{
+    GFILE = 1,
+    GDIRECTORY
 };
 
 #endif
