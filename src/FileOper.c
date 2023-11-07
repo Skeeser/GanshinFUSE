@@ -182,17 +182,31 @@ int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct 
 // 找到data空闲块
 int getFreeDataBlk(long *blk)
 {
-	// 打开文件
+	int ret = 0;
+	// getDataByBlkId()
+	// 读入超级块
+	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
+	getSuperBlock(sp_blk);
+
+	// 读取文件
 	FILE *fp = NULL;
-	fp = fopen(disk_path, "r+");
+	fp = fopen(DISK_PATH, "r+"); // 打开文件
 	if (fp == NULL)
-		return 0;
-	int start, left;
+	{
+		ret = -1;
+		printError("getFreeDataBlk: Open disk file failed! The file may don't exits.");
+		printf("disk_path: %s\n", DISK_PATH);
+		goto error;
+	}
+
+	int start,
+		left;
 	unsigned char mask, f; // 8bits
 	unsigned char *flag;
 	// max和max_start是用来记录可以找到的最大连续块的位置
 	int max = 0;
 	long max_start = -1;
+
 	// 要找到一片连续的区域，我们先检查bitmap
 	// 要确保start_blk的合法性(一共10240块，则块编号最多去到10239)
 	// 每一次找不到连续的一片区域存放数据，就会不断循环，直到找到为止
@@ -258,7 +272,11 @@ int getFreeDataBlk(long *blk)
 	}
 	printf("get_empty_blk：申请空间成功，函数结束返回\n\n");
 	free(flag);
-	return max;
+
+error:
+	fclose(fp);
+	free(sp_blk);
+	return ret;
 }
 
 int getFreeInodeBlk(long *blk);

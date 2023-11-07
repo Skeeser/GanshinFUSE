@@ -126,9 +126,10 @@ readelf -S ./GanshinTest
 
 <br>
 
-### 常见问题
-Q: 为什么我设了断点没用
-A: 因为编译出来的不是debug版本, 更改cmakelist.txt
+### 常见问题  
+Q: 为什么我设了断点没用  
+A: 因为编译出来的不是debug版本, 更改cmakelist.txt  
+
 ---
 
 <br>
