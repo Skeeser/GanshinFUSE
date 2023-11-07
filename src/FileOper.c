@@ -179,6 +179,9 @@ int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct 
 	memcpy(&(data_blk->data[offset]), p_fd, sizeof(struct GFileDir));
 }
 
+int getFreeDataBlk(int num, long *start_blk);
+int getFreeInodeBlk(int num, long *start_blk);
+
 // 根据哈希值在menu中创建file dir
 int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
 {
@@ -215,7 +218,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 初始化新的inode
 		// 更新inode bitmap
 		// 将file dir写入到data blk中
-		}
+	}
 	else if (hash_num < FD_FIRST_INDIR)
 	{
 		// 一次间接块  4
@@ -591,131 +594,6 @@ void fillStatByInode(struct GInode *inode, struct stat *st)
 	st->st_blksize = FS_BLOCK_SIZE;
 	st->st_blocks = *st_blocks;
 }
-
-/*
-// 拆分路径
-int dividePath(char *name, char *ext, const char *path, enum GTYPE file_type)
-{
-	char *tmp_path, *m, *n;
-	tmp_path = strdup(path); // 用来记录最原始的路径
-	struct file_directory *attr = malloc(sizeof(struct file_directory));
-	m = tmp_path;
-	if (!m)
-		return -errno; // 路径为空
-	m++;			   // 跳过第一个'/'
-
-	n = strchr(m, '/'); // 看是否有二级路径
-	// 如果找到二级路径的'/'，并且要创建的是目录，那么不允许，返回-1
-	if (n != NULL && flag == 2)
-	{
-		printf("错误：divide_path:二级路径下不能再创建目录，函数结束返回-EPERM\n\n");
-		return -EPERM;
-	}
-	else if (n != NULL)
-	{
-		printf("divide_path:要创建的是二级路径下的文件\n\n");
-		*n = '\0';
-		n++; // 此时n指向要创建的文件名的第一个字母
-		m = n;
-		if (get_fd_to_attr(tmp_path, attr) == -1)
-		{ // 读取该path的父目录，确认这个父目录是存在的
-			printf("错误：divide_path：找不到二级路径的父目录，函数结束返回-ENOENT\n\n");
-			free(attr);
-			return -ENOENT;
-		}
-	}
-	printf("divide_path检查：tmp_path=%s\nm=%s\nn=%s\n\n", tmp_path, m, n);
-
-	// 如果找不到二级路径'/'，说明要创建的对象是： /目录 或 /文件
-	// 那么这个路径的父目录为根目录，直接读出来
-	if (n == NULL)
-	{
-		printf("divide_path:要创建的是根目录下的对象\n\n");
-		if (get_fd_to_attr("/", attr) == -1)
-		{
-			printf("错误：divide_path：找不到根目录，函数结束返回-ENOENT\n\n");
-			free(attr);
-			return -ENOENT;
-		}
-	}
-	// 记录完要创建的对象的名字，如果该对象是文件，还要记录后缀名（有的文件没有后缀名）
-	if (flag == 1)
-	{
-		printf("divide_path:这是文件，有后缀名\n\n");
-		n = strchr(m, '.');
-		if (n != NULL)
-		{
-			*n = '\0'; // 截断tmp_path
-			n++;	   // 此时n指针指向后缀名的第一位
-		}
-	}
-	// 要创建对象，还要检查：文件名（目录名），后缀名的长度是否超长
-	if (flag == 1) // 如果创建的是文件
-	{
-		if (strlen(m) > MAX_FILENAME + 1)
-		{
-			free(attr);
-			return -ENAMETOOLONG;
-		}
-		else if (strlen(m) > MAX_FILENAME)
-		{
-			if (*(m + MAX_FILENAME) != '~')
-			{
-				free(attr);
-				return -ENAMETOOLONG;
-			}
-		}
-		else if (n != NULL) // 如果有后缀名
-		{
-			if (strlen(n) > MAX_EXTENSION + 1)
-			{
-				free(attr);
-				return -ENAMETOOLONG;
-			}
-			else if (strlen(n) > MAX_EXTENSION)
-			{
-				if (*(n + MAX_EXTENSION) != '~')
-				{
-					free(attr);
-					return -ENAMETOOLONG;
-				}
-			}
-		}
-	}
-	else if (flag == 2) // 如果创建的是目录
-	{
-		if (strlen(m) > MAX_DIR_IN_BLOCK)
-		{
-			free(attr);
-			return -ENAMETOOLONG;
-		}
-	}
-	*name = '\0';
-	*ext = '\0';
-	if (m != NULL)
-		strcpy(name, m);
-	if (n != NULL)
-		strcpy(ext, n);
-
-	printf("已经获取到父目录的file_directory（attr），检查一下：\n\n");
-	printf("attr:fname=%s，fext=%s，fsize=%ld，nstartblock=%ld，flag=%d\n\n", attr->fname,
-		   attr->fext, attr->fsize, attr->nStartBlock, attr->flag);
-	// 把开始块信息赋值给par_dir_stblk
-	*par_dir_stblk = attr->nStartBlock;
-	// 这里要获取父目录文件的大小
-	*par_size = attr->fsize;
-	printf("divide_path：检查过要创建对象的文件（目录）名，并没有问题\n\n");
-	printf("divide_path：分割后的父目录名：%s\n文件名：%s\n后缀名：%s\npar_dir_stblk=%ld\n\n", tmp_path, name, ext, *par_dir_stblk);
-	printf("divide_path：函数结束返回\n\n");
-	free(attr);
-	free(tmp_path);
-	if (*par_dir_stblk == -1)
-		return -ENOENT;
-
-	return 0;
-}
-
-*/
 
 // 检查文件名
 int checkFileFname(const char *fname)

@@ -16,11 +16,13 @@ int checkFilePath(const char *path);
 
 // Data
 int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk);
+int getFreeDataBlk(int num, long *start_blk);
 
 // Inode
 int getInodeByBlkId(short int blk_id, struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getInodeBlkByPath(const char *path, short int *file_inode);
+int getFreeInodeBlk(int num, long *start_blk);
 
 // Utils
 void fillStatByInode(struct GInode *inode, struct stat *st);
