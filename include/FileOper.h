@@ -11,18 +11,21 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "Config.h"
 
 // 规范函数名称, 作用和返回值, 默认返回0为成功
+// superblock
+int getSuperBlock(struct GSuperBlock *sp_blk);
+
 // path
 int checkFilePath(const char *path);
 
 // Data
 int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk);
-int getFreeDataBlk(int num, long *start_blk);
+int getFreeDataBlk(long *blk);
 
 // Inode
 int getInodeByBlkId(short int blk_id, struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getInodeBlkByPath(const char *path, short int *file_inode);
-int getFreeInodeBlk(int num, long *start_blk);
+int getFreeInodeBlk(long *blk);
 
 // Utils
 void fillStatByInode(struct GInode *inode, struct stat *st);

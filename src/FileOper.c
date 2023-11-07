@@ -179,8 +179,89 @@ int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct 
 	memcpy(&(data_blk->data[offset]), p_fd, sizeof(struct GFileDir));
 }
 
-int getFreeDataBlk(int num, long *start_blk);
-int getFreeInodeBlk(int num, long *start_blk);
+// 找到data空闲块
+int getFreeDataBlk(long *blk)
+{
+	// 打开文件
+	FILE *fp = NULL;
+	fp = fopen(disk_path, "r+");
+	if (fp == NULL)
+		return 0;
+	int start, left;
+	unsigned char mask, f; // 8bits
+	unsigned char *flag;
+	// max和max_start是用来记录可以找到的最大连续块的位置
+	int max = 0;
+	long max_start = -1;
+	// 要找到一片连续的区域，我们先检查bitmap
+	// 要确保start_blk的合法性(一共10240块，则块编号最多去到10239)
+	// 每一次找不到连续的一片区域存放数据，就会不断循环，直到找到为止
+	printf("get_empty_blk：现在开始寻找一片连续的区域\n\n");
+	while (*start_blk < TOTAL_BLOCK_NUM)
+	{
+		start = *start_blk / 8;		 // start_blk每个循环结束都会更新到新的磁盘块空闲的位置
+		left = 8 - (*start_blk % 8); // 1byte里面的第几bit是空的
+		mask = 1;
+		mask <<= left;
+		fseek(fp, FS_BLOCK_SIZE + start, SEEK_SET); // 跳过super block，跳到bitmap中start_blk指定位置（以byte为单位）
+		flag = malloc(sizeof(unsigned char));		// 8bits
+		fread(flag, sizeof(unsigned char), 1, fp);	// 读出8个bit
+		f = *flag;
+		// 下面开始检查这一片连续存储空间是否满足num块大小的要求
+		for (tmp = 0; tmp < num; tmp++)
+		{
+			// mask为1的位，f中为1，该位被占用，说明这一片连续空间不够大，跳出
+			if ((f & mask) == mask)
+				break;
+			// mask最低位为1，说明这个byte已检查到最低位，8个bit已读完
+			if ((mask & 0x01) == 0x01)
+			{ // 读下8个bit
+				fread(flag, sizeof(unsigned char), 1, fp);
+				f = *flag;
+				mask = 0x80; // 指向8个bit的最高位
+			}
+			// 位为1,右移1位，检查下一位是否可用
+			else
+				mask >>= 1;
+		}
+		// 跳出上面的循环有两种可能，一种是tmp==num，说明已经找到了连续空间
+		// 另外一种是tmp<num说明这片连续空间不够大，要更新start_blk的位置
+		// tmp为找到的可用连续块数目
+		if (tmp > max)
+		{
+			// 记录这个连续块的起始位
+			max_start = *start_blk;
+			max = tmp;
+		}
+		// 如果后来找到的连续块数目少于之前找到的，不做替换
+		// 找到了num个连续的空白块
+		if (tmp == num)
+			break;
+		// 只找到了tmp个可用block，小于num，要重新找，更新起始块号
+		*start_blk = (tmp + 1) + *start_blk;
+		tmp = 0;
+		// 找不到空闲块
+	}
+	*start_blk = max_start;
+	fclose(fp);
+	int j = max_start;
+	int i;
+	// 将这片连续空间在bitmap中标记为1
+	for (i = 0; i < max; i++)
+	{
+		if (set_blk_use(j++, 1) == -1)
+		{
+			printf("错误：get_empty_blk：set_blk_use失败，函数结束返回\n\n");
+			free(flag);
+			return -1;
+		}
+	}
+	printf("get_empty_blk：申请空间成功，函数结束返回\n\n");
+	free(flag);
+	return max;
+}
+
+int getFreeInodeBlk(long *blk);
 
 // 根据哈希值在menu中创建file dir
 int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
@@ -323,35 +404,44 @@ int checkFilePath(const char *path)
 	return 0;
 }
 
-// 根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
-int getFileDirByPath(const char *path, struct GFileDir *attr)
+// 读超级块
+int getSuperBlock(struct GSuperBlock *sp_blk)
 {
-	// 获取磁盘根目录块的位置
-	printSuccess("Get File Dir To Attr Start!");
-	printf("getFileDirToAttr: get file dir by: %s\n", path);
-
 	struct GDataBlock *data_blk;
 	data_blk = malloc(sizeof(struct GDataBlock));
 
 	// 读出超级块
 	if (getDataByBlkId(0, data_blk) == -1)
 	{
-		printError("getFileDirToAttr: read super block failed!");
+		printError("readSuperBlock: read super block failed!");
 		free(data_blk);
 		return -1;
 	}
 	else
-		printSuccess("getFileDirToAttr: read super block success!");
+		printSuccess("readSuperBlock: read super block success!");
+	memcpy(sp_blk, data_blk, sizeof(struct GSuperBlock));
+
+	free(data_blk);
+	return 0;
+}
+
+// 根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
+int getFileDirByPath(const char *path, struct GFileDir *attr)
+{
+	// 获取磁盘根目录块的位置
+	// printSuccess("Get File Dir To Attr Start!");
+	printf("getFileDirToAttr: get file dir by: %s\n", path);
 
 	struct GSuperBlock *sp_blk;
 	// 将原本GDataBlock的数据转换成GSuperBlock
-	sp_blk = (struct GSuperBlock *)data_blk;
-	long start_inode;
+	sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
+	getSuperBlock(sp_blk);
+	long start_inode = -1;
 	start_inode = sp_blk->first_inode;
-
 	printf("Super Block:\nfs_size=%ld, first_blk=%ld, datasize=%ld, first_inode=%ld, inode_area_size=%ld, fisrt_blk_of_inodebitmap=%ld, inodebitmap_size=%ld, first_blk_of_databitmap=%ld, databitmap_size=%ld\n",
 		   sp_blk->fs_size, sp_blk->first_blk, sp_blk->datasize, sp_blk->first_inode, sp_blk->inode_area_size, sp_blk->fisrt_blk_of_inodebitmap,
 		   sp_blk->inodebitmap_size, sp_blk->first_blk_of_databitmap, sp_blk->databitmap_size);
+
 	printf("start_inode:%ld\n", start_inode);
 
 	int ret = 0;
