@@ -104,10 +104,11 @@ static void initDataBitmap(FILE *const fp)
 
     int temp_data = 0;
     const int rest_used_block = used_block % 32;
+    // 利用循环置1
     for (int i = 0; i < rest_used_block; i++)
     {
         int mask = 1;
-        mask <<= (31 - i); // 1281
+        mask <<= (31 - i);
         temp_data |= mask;
     }
     fwrite(&temp_data, sizeof(int), 1, fp);

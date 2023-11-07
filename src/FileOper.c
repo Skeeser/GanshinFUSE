@@ -180,17 +180,20 @@ int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct 
 }
 
 // 找到data空闲块
-int getFreeDataBlk(long *blk)
+int getFreeDataBlk(const int need_num, long *start_blk)
 {
 	int ret = 0;
 	// getDataByBlkId()
 	// 读入超级块
 	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
 	getSuperBlock(sp_blk);
+	const long start_data_bitmap = sp_blk->first_blk_of_databitmap;
+	const long max_data_size = sp_blk->databitmap_size;
+	const long max_data_bitmap = start_data_bitmap + max_data_size;
 
 	// 读取文件
 	FILE *fp = NULL;
-	fp = fopen(DISK_PATH, "r+"); // 打开文件
+	fp = fopen(DISK_PATH, "r+");
 	if (fp == NULL)
 	{
 		ret = -1;
@@ -199,27 +202,28 @@ int getFreeDataBlk(long *blk)
 		goto error;
 	}
 
-	int start,
-		left;
-	unsigned char mask, f; // 8bits
-	unsigned char *flag;
-	// max和max_start是用来记录可以找到的最大连续块的位置
-	int max = 0;
-	long max_start = -1;
-
-	// 要找到一片连续的区域，我们先检查bitmap
-	// 要确保start_blk的合法性(一共10240块，则块编号最多去到10239)
-	// 每一次找不到连续的一片区域存放数据，就会不断循环，直到找到为止
-	printf("get_empty_blk：现在开始寻找一片连续的区域\n\n");
-	while (*start_blk < TOTAL_BLOCK_NUM)
+	// 移动指针到文件的DataBitmap块
+	if (fseek(fp, FS_BLOCK_SIZE * (SUPER_BLOCK + INODE_BITMAP), SEEK_SET) != 0)
 	{
-		start = *start_blk / 8;		 // start_blk每个循环结束都会更新到新的磁盘块空闲的位置
-		left = 8 - (*start_blk % 8); // 1byte里面的第几bit是空的
-		mask = 1;
-		mask <<= left;
-		fseek(fp, FS_BLOCK_SIZE + start, SEEK_SET); // 跳过super block，跳到bitmap中start_blk指定位置（以byte为单位）
-		flag = malloc(sizeof(unsigned char));		// 8bits
-		fread(flag, sizeof(unsigned char), 1, fp);	// 读出8个bit
+		ret = -1;
+		printError("getFreeDataBlk: DataBitmap fseek failed!");
+		goto error;
+	}
+
+	long cur_blk = start_data_bitmap;
+
+	// 检查数据区bitmap, 不断循环直到找到符合条件的连续n块空闲块
+	while (cur_blk < max_data_bitmap)
+	{
+
+		// start = *start_blk / 8;		 // start_blk每个循环结束都会更新到新的磁盘块空闲的位置
+		// left = 8 - (*start_blk % 8); // 1byte里面的第几bit是空的
+		// mask = 1;
+		// mask <<= left;
+
+		unsigned char *temp_区块 = malloc(sizeof(unsigned char)); // 8bits
+
+		fread(flag, sizeof(unsigned char), 1, fp); // 读出8个bit
 		f = *flag;
 		// 下面开始检查这一片连续存储空间是否满足num块大小的要求
 		for (tmp = 0; tmp < num; tmp++)
@@ -256,8 +260,14 @@ int getFreeDataBlk(long *blk)
 		tmp = 0;
 		// 找不到空闲块
 	}
-	*start_blk = max_start;
-	fclose(fp);
+
+	// 检查是否合法, 到了最后了
+	// if (cur_blk == max_data_bitmap - 1)
+	// {
+	// 	ret = -1;
+	// 	goto error;
+	// }
+
 	int j = max_start;
 	int i;
 	// 将这片连续空间在bitmap中标记为1
@@ -279,7 +289,9 @@ error:
 	return ret;
 }
 
-int getFreeInodeBlk(long *blk);
+int getFreeInodeBlk(const int need_num, long *start_blk)
+{
+}
 
 // 根据哈希值在menu中创建file dir
 int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
