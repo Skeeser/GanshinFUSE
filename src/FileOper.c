@@ -247,11 +247,12 @@ error:
 	fclose(fp);
 	return ret;
 }
+
 // 找到data空闲块
 int getFreeDataBlk(const int need_num, long *start_blk)
 {
 	int ret = 0;
-	// getDataByBlkId()
+
 	// 读入超级块
 	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
 	unsigned char *temp_unit = malloc(sizeof(unsigned char)); // 8bits
@@ -367,8 +368,123 @@ error:
 	return ret;
 }
 
+// 找到inode空闲块
 int getFreeInodeBlk(const int need_num, long *start_blk)
 {
+	int ret = 0;
+	// 读入超级块
+	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
+	unsigned char *temp_unit = malloc(sizeof(unsigned char)); // 8bits
+	getSuperBlock(sp_blk);
+	const long start_inode_bitmap = sp_blk.fir;
+	const long max_inode_size = sp_blk->inodebitmap_size;
+	const long max_inode_bitmap = start_inode_bitmap + max_inode_size;
+	const int max_num_perblk = FS_BLOCK_SIZE;
+
+	// 读取文件
+	FILE *fp = NULL;
+	fp = fopen(DISK_PATH, "r+");
+	if (fp == NULL)
+	{
+		ret = -1;
+		printError("getFreeInodeBlk: Open disk file failed! The file may don't exits.");
+		printf("disk_path: %s\n", DISK_PATH);
+		goto error;
+	}
+
+	// 移动指针到文件的DataBitmap块
+	if (fseek(fp, FS_BLOCK_SIZE * start_data_bitmap, SEEK_SET) != 0)
+	{
+		ret = -1;
+		printError("getFreeInodeBlk: DataBitmap fseek failed!");
+		goto error;
+	}
+
+	long cur_blk = start_data_bitmap;
+	// 已经遍历的块数量
+	long iter_blk_num = 0;
+	// 已经遍历的byte数量
+	long iter_byte_num = 0;
+	// 已经遍历的bit数量
+	long iter_bit_num = 0;
+	// 当前已经满足的bit数量
+	int cur_neededBit_num = 0;
+	// 检查结束标志
+	int done_flag = 0;
+
+	// 检查数据区bitmap, 不断循环直到找到符合条件的连续n块空闲块
+	for (cur_blk < max_data_bitmap)
+	{
+		unsigned char cur_mask = 0x80;
+		// 遍历块中的每一个Byte
+		for (iter_byte_num = 0; iter_byte_num < max_num_perblk; iter_byte_num++)
+		{
+			// 读出8个bit
+			fread(temp_unit, sizeof(unsigned char), 1, fp);
+			const unsigned char cur_byte = *temp_unit;
+			// 遍历一个Byte
+			for (iter_bit_num = 0; iter_bit_num < 8; iter_bit_num++)
+			{
+				// 与操作, 等于mask说明当前指向的bit被占用
+				if ((cur_byte & cur_mask) != cur_mask)
+					cur_neededBit_num++;
+				else
+					// 被占用,清零
+					cur_neededBit_num = 0;
+
+				// 空闲bit数符合要求
+				if (cur_neededBit_num == need_num)
+				{
+					done_flag = 1;
+				}
+
+				if (done_flag)
+					break;
+				// mask最低位为1, 说明8个bit已读完
+				if ((cur_mask & 0x01) == 0x01)
+				{
+					// 重新初始化为高位
+					cur_mask = 0x80;
+				}
+				// 位为1,右移1位，检查下一位是否可用
+				else
+					cur_mask >>= 1;
+			}
+			if (done_flag)
+				break;
+		}
+		if (done_flag)
+			break;
+
+		// 增加已经遍历的块号
+		iter_blk_num++;
+	}
+
+	// 检查是否到了最后还是不满足
+	if (cur_blk == max_data_bitmap - 1 && iter_byte_num == max_num_perblk - 1 && iter_bit_num == 7)
+	{
+		ret = -1;
+		printError("getFreeInodeBlk: data bitmap has no blk.");
+		goto error;
+	}
+
+	// 计算开始的块号
+	*start_blk = iter_blk_num * FS_BLOCK_SIZE * 8 + iter_byte_num * 8 + iter_bit_num - need_num + 1;
+
+	// 标记已经使用的块号
+	if ((ret = setBitmapUsed(start_data_bitmap, need_num, *start_blk)) != 0)
+	{
+
+		printError("getFreeInodeBlk: set bitmap failed!");
+		goto error;
+	}
+	printSuccess("getFreeInodeBlk: malloc data blk success!");
+
+error:
+	fclose(fp);
+	free(sp_blk);
+	free(temp_unit);
+	return ret;
 }
 
 // 根据哈希值在menu中创建file dir
@@ -546,8 +662,8 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 	getSuperBlock(sp_blk);
 	long start_inode = -1;
 	start_inode = sp_blk->first_inode;
-	printf("Super Block:\nfs_size=%ld, first_blk=%ld, datasize=%ld, first_inode=%ld, inode_area_size=%ld, fisrt_blk_of_inodebitmap=%ld, inodebitmap_size=%ld, first_blk_of_databitmap=%ld, databitmap_size=%ld\n",
-		   sp_blk->fs_size, sp_blk->first_blk, sp_blk->datasize, sp_blk->first_inode, sp_blk->inode_area_size, sp_blk->fisrt_blk_of_inodebitmap,
+	printf("Super Block:\nfs_size=%ld, first_blk=%ld, datasize=%ld, first_inode=%ld, inode_area_size=%ld, first_blk_of_inodebitmap=%ld, inodebitmap_size=%ld, first_blk_of_databitmap=%ld, databitmap_size=%ld\n",
+		   sp_blk->fs_size, sp_blk->first_blk, sp_blk->datasize, sp_blk->first_inode, sp_blk->inode_area_size, sp_blk->first_blk_of_inodebitmap,
 		   sp_blk->inodebitmap_size, sp_blk->first_blk_of_databitmap, sp_blk->databitmap_size);
 
 	printf("start_inode:%ld\n", start_inode);

@@ -17,7 +17,7 @@ static void initSuperBlock(FILE *const fp)
     super_blk->datasize = DATA_BITMAP * FS_BLOCK_SIZE * 8;
     super_blk->first_inode = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP;
     super_blk->inode_area_size = INODE_BLOCK;
-    super_blk->fisrt_blk_of_inodebitmap = SUPER_BLOCK;
+    super_blk->first_blk_of_inodebitmap = SUPER_BLOCK;
     super_blk->inodebitmap_size = INODE_BITMAP;
     super_blk->first_blk_of_databitmap = SUPER_BLOCK + INODE_BITMAP;
     super_blk->databitmap_size = DATA_BITMAP;
