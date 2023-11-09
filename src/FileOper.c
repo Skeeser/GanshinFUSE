@@ -7,7 +7,7 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #include "FileOper.h"
 
 // 根据块号, 读取文件数据GDataBlock
-int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk)
+int getDataByBlkId(const short int blk_id, struct GDataBlock *data_blk)
 {
 
 	// 读取文件
@@ -49,7 +49,7 @@ int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk)
 }
 
 // 根据块号, 将文件数据GDataBlock写入文件
-int writeDataByBlkId(short int blk_id, struct GDataBlock *data_blk)
+int writeDataByBlkId(short int blk_id, const struct GDataBlock *data_blk)
 {
 
 	// 读取文件
@@ -90,10 +90,9 @@ int writeDataByBlkId(short int blk_id, struct GDataBlock *data_blk)
 }
 
 // 根据块号, 读取Inode
-int getInodeByBlkId(short int blk_id, struct GInode *inode_blk)
+int getInodeByBlkId(const short int blk_id, struct GInode *inode_blk)
 {
 	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
-	// struct GInode *temp_inode = malloc(sizeof(struct GInode));
 	int ret = getDataByBlkId(blk_id, gblk);
 	if (ret != 0)
 	{
@@ -101,26 +100,25 @@ int getInodeByBlkId(short int blk_id, struct GInode *inode_blk)
 		return ret;
 	}
 
-	memcpy(inode_blk, (struct GInode *)gblk, sizeof(struct GInode));
-	// free(temp_inode);
+	memcpy(inode_blk, gblk->data, sizeof(struct GInode));
 	free(gblk);
 	return 0;
 }
 
-// 根据块号, 写入Inode
-int writeInodeByBlkId(short int blk_id, struct GInode *inode_blk)
+// 根据块号, 写入Inode, 一个块一个inode
+int writeInodeByBlkId(const short int blk_id, const struct GInode *inode_blk)
 {
 	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
-	// struct GInode *temp_inode = malloc(sizeof(struct GInode));
-	int ret = getDataByBlkId(blk_id, gblk);
+	gblk->size += sizeof(struct GInode);
+	memcpy(gblk->data, inode_blk, sizeof(struct GInode));
+	int ret = writeDataByBlkId(blk_id, gblk);
+
 	if (ret != 0)
 	{
 		free(gblk);
 		return ret;
 	}
 
-	memcpy(inode_blk, (struct GInode *)gblk, sizeof(struct GInode));
-	// free(temp_inode);
 	free(gblk);
 	return 0;
 }
