@@ -351,14 +351,12 @@ int getFreeDataBlk(const int need_num, long *start_blk)
 	// 计算开始的块号
 	*start_blk = iter_blk_num * FS_BLOCK_SIZE * 8 + iter_byte_num * 8 + iter_bit_num - need_num + 1;
 
-	// 标记bitmap
-	for (i = 0; i < max; i++)
+	// 标记已经使用的块号
+	if ((ret = setBitmapUsed(start_data_bitmap, need_num, *start_blk)) != 0)
 	{
-		if (set_blk_use(j++, 1) == -1)
-		{
 
-			return -1;
-		}
+		printError("getFreeDataBlk: set bitmap failed!");
+		goto error;
 	}
 	printSuccess("getFreeDataBlk: malloc data blk success!");
 
