@@ -10,6 +10,9 @@
 - [x] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
 - [x] 实现格式化程序(GanshinInit)
 - [ ] 文件系统实现(GanshinFS)
+- [x] GFS_init初始化
+- [x] GFS_getattr获取文件属性
+- [ ] GFS_mknod创建文件
 - [ ] 优化disk的地址逻辑, 弄成不用手动设置
 - [ ] 将所有的步骤写成脚本
 - [ ] 解决哈希冲突
@@ -205,6 +208,8 @@ i节点, 根目录指向data区的一个块地址
 先确定菜单的inode  
 然后确定菜单中没有该文件  
 计算哈希,插入  
+
+#### createFileDirByHash
 
 <br>
 

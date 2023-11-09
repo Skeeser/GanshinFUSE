@@ -542,20 +542,53 @@ error:
 	return ret;
 }
 
-// 根据哈希值在menu中创建file dir
+// 初始化inode
+int initInode(struct GInode *inode)
+{
+	int ret = 0;
+	// 为根目录的 struct GInode 对象赋值
+	inode->st_mode = 0755;		// 权限，例如 rwxr-xr-x
+	inode->st_ino = 0;			// i-node号为0
+	inode->st_nlink = 1;		// 连接数，通常为1
+	inode->st_uid = 0;			// 根目录的用户 ID，通常为0（超级用户）
+	inode->st_gid = 0;			// 根目录的组 ID，通常为0（超级用户组）
+	inode->st_size = FILE_SIZE; // 文件大小，为4KB
+	time_t currentTime;
+	currentTime = time(NULL); // 获取当前时间
+
+	if (currentTime == (time_t)-1)
+	{
+		ret = -1;
+		printError("Inode get time failed!");
+	}
+	else
+	{
+		printSuccess("Inode get time success!");
+	}
+	inode->st_atim = currentTime;
+
+	// 设置磁盘地址
+	// 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
+	// addr[5]是二次间接，addr[6]是三次间接。
+	memset(inode->addr, -1, sizeof(inode->addr));
+	return ret;
+}
+
+// 根据哈希值在menu中创建file dir, cur_i是当前菜单的inode号
 int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
 {
 	int ret = 0;
 
+	struct GInode *menu_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	// 获取当前inode号的inode
-	getInodeByBlkId(cur_i, temp_inode);
+	getInodeByBlkId(cur_i, menu_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 
 	if (0 <= hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
-		short int addr = temp_inode->addr[i];
+		short int addr = menu_inode->addr[i];
 		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 
 		if (addr < 0) // 地址未被创建
@@ -563,11 +596,11 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 			// 根据data bitmap, 找到空闲块
 			getFreeDataBlk(1, &addr);
 			// 将块号赋值给原本未被创建的addr的位置
-			temp_inode->addr[i] = addr;
+			menu_inode->addr[i] = addr;
 			// 将该数据块的GDataBlock中的size全部初始化为0
 			getDataByBlkId(addr, data_blk);
 			data_blk->size = 0;
-			writeDataByBlkId(addr, data_blk);
+			// writeDataByBlkId(addr, data_blk);
 		}
 		else // 地址已被创建
 		{
@@ -576,17 +609,35 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		}
 
 		// 目录的inode中增加st_size
-
+		menu_inode->st_size += sizeof(struct GFileDir);
 		// 更新目录的inode st_atim
+		time_t currentTime;
+		currentTime = time(NULL); // 获取当前时间
+		if (currentTime == (time_t)-1)
+			printError("Inode get time failed!");
+		else
+			printSuccess("Inode get time success!");
+		menu_inode->st_atim = currentTime;
+		// 写进menu_inode
+		writeInodeByBlkId(cur_i, menu_inode);
 		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
+		short int temp_free_inode = -1;
+		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
-		// 更新inode bitmap
+		initInode(temp_inode);
+		// 将新inode写进文件
+		writeInodeByBlkId(temp_free_inode, temp_inode);
+		// 更新传进来的file dir
+		p_filedir->nInodeBlock = temp_free_inode;
 		// 将file dir写入到data blk中
+		writeFileDirToDataBlk(p_filedir, offset, data_blk);
+		// 将data blk写入到文件
+		writeDataByBlkId(addr, data_blk);
 	}
 	else if (hash_num < FD_FIRST_INDIR)
 	{
 		// 一次间接块  4
-		short int addr = temp_inode->addr[4];
+		short int addr = menu_inode->addr[4];
 		if (addr < 0)
 			goto error;
 		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
@@ -599,7 +650,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	else if (hash_num < FD_SECOND_INDIR)
 	{
 		// 二次间接块  5
-		short int addr = temp_inode->addr[5];
+		short int addr = menu_inode->addr[5];
 		if (addr < 0)
 			goto error;
 		getDataByBlkId(addr, data_blk);
@@ -617,7 +668,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	else if (hash_num < MAX_HASH_SIZE)
 	{
 		// 三次间接块  6
-		short int addr = temp_inode->addr[6];
+		short int addr = menu_inode->addr[6];
 		if (addr < 0)
 			goto error;
 		getDataByBlkId(addr, data_blk);
@@ -638,14 +689,15 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	}
 	else
 	{
-	error:
+		ret = -1;
 		printf("getFileDirByHash: the file may be not exited.\n");
-		free(data_blk);
-		free(temp_inode);
-		return -1;
+		goto error;
 	}
-	free(data_blk);
+
+error:
 	free(temp_inode);
+	free(data_blk);
+	free(menu_inode);
 	return ret;
 }
 
