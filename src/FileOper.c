@@ -228,10 +228,13 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 // 将filedir写入到GDataBlock的data中
 int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk)
 {
+	int ret = 0;
 	// 增加大小
 	data_blk->size += sizeof(struct GFileDir);
 	// 写入
 	memcpy(&(data_blk->data[offset]), p_fd, sizeof(struct GFileDir));
+
+	return ret;
 }
 
 // 设置bitmap已经被使用
@@ -574,6 +577,28 @@ int initInode(struct GInode *inode)
 	return ret;
 }
 
+// 根据menu的inode, 获取地址和data blk
+void getAddrAndDataBlk(const addr_i, short int *addr, struct GInode *menu_inode, struct GDataBlock *data_blk)
+{
+	*addr = menu_inode->addr[addr_i];
+	if (*addr < 0) // 地址未被创建
+	{
+		// 根据data bitmap, 找到空闲块
+		getFreeDataBlk(1, &addr);
+		// 将块号赋值给原本未被创建的addr的位置
+		menu_inode->addr[addr_i] = addr;
+		// 将该数据块的GDataBlock中的size全部初始化为0
+		getDataByBlkId(addr, data_blk);
+		data_blk->size = 0;
+		// writeDataByBlkId(addr, data_blk);
+	}
+	else // 地址已被创建
+	{
+		getDataByBlkId(addr, data_blk);
+		// getFileDirFromDataBlk(data_blk, offset, p_filedir);
+	}
+}
+
 // 根据哈希值在menu中创建file dir, cur_i是当前菜单的inode号
 int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
 {
@@ -588,25 +613,11 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	if (0 <= hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
-		short int addr = menu_inode->addr[i];
+		short int addr = -1;
 		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 
-		if (addr < 0) // 地址未被创建
-		{
-			// 根据data bitmap, 找到空闲块
-			getFreeDataBlk(1, &addr);
-			// 将块号赋值给原本未被创建的addr的位置
-			menu_inode->addr[i] = addr;
-			// 将该数据块的GDataBlock中的size全部初始化为0
-			getDataByBlkId(addr, data_blk);
-			data_blk->size = 0;
-			// writeDataByBlkId(addr, data_blk);
-		}
-		else // 地址已被创建
-		{
-			getDataByBlkId(addr, data_blk);
-			// getFileDirFromDataBlk(data_blk, offset, p_filedir);
-		}
+		// 获取地址和data blk
+		getAddrAndDataBlk(i, &addr, menu_inode, data_blk);
 
 		// 目录的inode中增加st_size
 		menu_inode->st_size += sizeof(struct GFileDir);
@@ -620,6 +631,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		menu_inode->st_atim = currentTime;
 		// 写进menu_inode
 		writeInodeByBlkId(cur_i, menu_inode);
+
 		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
 		short int temp_free_inode = -1;
 		getFreeInodeBlk(1, &temp_free_inode);

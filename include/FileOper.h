@@ -21,6 +21,7 @@ int checkFilePath(const char *path);
 int getDataByBlkId(const short int blk_id, struct GDataBlock *data_blk);
 int writeDataByBlkId(const short int blk_id, const struct GDataBlock *data_blk);
 int getFreeDataBlk(const int need_num, long *start_blk);
+void getAddrAndDataBlk(const addr_i, short int *addr, struct GInode *menu_inode, struct GDataBlock *data_blk);
 
 // Inode
 int getInodeByBlkId(const short int blk_id, struct GInode *inode_blk);
