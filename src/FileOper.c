@@ -179,6 +179,74 @@ int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct 
 	memcpy(&(data_blk->data[offset]), p_fd, sizeof(struct GFileDir));
 }
 
+// 设置bitmap已经被使用
+int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int num)
+{
+	int ret = 0;
+	// 读取文件
+	FILE *fp = NULL;
+	fp = fopen(DISK_PATH, "r+");
+	if (fp == NULL)
+	{
+		ret = -1;
+		printError("setBitmapUsed: Open disk file failed! The file may don't exits.");
+		printf("disk_path: %s\n", DISK_PATH);
+		goto error;
+	}
+
+	const long offset_temp_byte = offset_bit / 8;
+	const long offset_temp_bit = offset_bit % 8;
+
+	// 移动指针到文件的DataBitmap块
+	if (fseek(fp, FS_BLOCK_SIZE * start_bitmap_blk + offset_temp_byte, SEEK_SET) != 0)
+	{
+		ret = -1;
+		printError("setBitmapUsed: DataBitmap fseek failed!");
+		goto error;
+	}
+
+	unsigned char temp_byte = 0x00;
+	fread(&temp_byte, sizeof(unsigned char), 1, fp);
+	// 返回之前的指针
+	fseek(fp, -1, SEEK_CUR);
+	// 处理开头的offset的bit情况
+	for (int i = 0; i < num % (8 - offset_temp_bit); i++)
+	{
+		unsigned char mask = 0x80;
+		mask >>= (offset_temp_bit + i);
+		temp_byte |= mask;
+	}
+	fwrite(&temp_byte, sizeof(unsigned char), 1, fp);
+
+	// 处理一整个Byte都是num区间内的情况
+	const int set_byte_num = (num + offset_temp_bit) / 8 - 1;
+	if (set_byte_num)
+	{
+		unsigned char a[set_byte_num];
+		memset(a, 1, sizeof(a));
+		fwrite(a, sizeof(a), 1, fp);
+	}
+
+	// 处理一整个Byte只有一部分在num区间内的情况
+	temp_byte = 0x00;
+	fread(&temp_byte, sizeof(unsigned char), 1, fp);
+	// 返回之前的指针
+	fseek(fp, -1, SEEK_CUR);
+	const int rest_used_bit = (num + offset_temp_bit) % 8;
+	// 利用循环置1
+	for (int i = 0; i < rest_used_bit; i++)
+	{
+		unsigned char mask = 0x01;
+		mask <<= (8 - i);
+		temp_byte |= mask;
+	}
+	fwrite(&temp_byte, sizeof(int), 1, fp);
+	printSuccess("setBitmapUsed: set free bit done!");
+
+error:
+	fclose(fp);
+	return ret;
+}
 // 找到data空闲块
 int getFreeDataBlk(const int need_num, long *start_blk)
 {
@@ -186,10 +254,12 @@ int getFreeDataBlk(const int need_num, long *start_blk)
 	// getDataByBlkId()
 	// 读入超级块
 	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
+	unsigned char *temp_unit = malloc(sizeof(unsigned char)); // 8bits
 	getSuperBlock(sp_blk);
 	const long start_data_bitmap = sp_blk->first_blk_of_databitmap;
 	const long max_data_size = sp_blk->databitmap_size;
 	const long max_data_bitmap = start_data_bitmap + max_data_size;
+	const int max_num_perblk = FS_BLOCK_SIZE;
 
 	// 读取文件
 	FILE *fp = NULL;
@@ -203,7 +273,7 @@ int getFreeDataBlk(const int need_num, long *start_blk)
 	}
 
 	// 移动指针到文件的DataBitmap块
-	if (fseek(fp, FS_BLOCK_SIZE * (SUPER_BLOCK + INODE_BITMAP), SEEK_SET) != 0)
+	if (fseek(fp, FS_BLOCK_SIZE * start_data_bitmap, SEEK_SET) != 0)
 	{
 		ret = -1;
 		printError("getFreeDataBlk: DataBitmap fseek failed!");
@@ -211,81 +281,91 @@ int getFreeDataBlk(const int need_num, long *start_blk)
 	}
 
 	long cur_blk = start_data_bitmap;
+	// 已经遍历的块数量
+	long iter_blk_num = 0;
+	// 已经遍历的byte数量
+	long iter_byte_num = 0;
+	// 已经遍历的bit数量
+	long iter_bit_num = 0;
+	// 当前已经满足的bit数量
+	int cur_neededBit_num = 0;
+	// 检查结束标志
+	int done_flag = 0;
 
 	// 检查数据区bitmap, 不断循环直到找到符合条件的连续n块空闲块
-	while (cur_blk < max_data_bitmap)
+	for (cur_blk < max_data_bitmap)
 	{
-
-		// start = *start_blk / 8;		 // start_blk每个循环结束都会更新到新的磁盘块空闲的位置
-		// left = 8 - (*start_blk % 8); // 1byte里面的第几bit是空的
-		// mask = 1;
-		// mask <<= left;
-
-		unsigned char *temp_区块 = malloc(sizeof(unsigned char)); // 8bits
-
-		fread(flag, sizeof(unsigned char), 1, fp); // 读出8个bit
-		f = *flag;
-		// 下面开始检查这一片连续存储空间是否满足num块大小的要求
-		for (tmp = 0; tmp < num; tmp++)
+		unsigned char cur_mask = 0x80;
+		// 遍历块中的每一个Byte
+		for (iter_byte_num = 0; iter_byte_num < max_num_perblk; iter_byte_num++)
 		{
-			// mask为1的位，f中为1，该位被占用，说明这一片连续空间不够大，跳出
-			if ((f & mask) == mask)
-				break;
-			// mask最低位为1，说明这个byte已检查到最低位，8个bit已读完
-			if ((mask & 0x01) == 0x01)
-			{ // 读下8个bit
-				fread(flag, sizeof(unsigned char), 1, fp);
-				f = *flag;
-				mask = 0x80; // 指向8个bit的最高位
+			// 读出8个bit
+			fread(temp_unit, sizeof(unsigned char), 1, fp);
+			const unsigned char cur_byte = *temp_unit;
+			// 遍历一个Byte
+			for (iter_bit_num = 0; iter_bit_num < 8; iter_bit_num++)
+			{
+				// 与操作, 等于mask说明当前指向的bit被占用
+				if ((cur_byte & cur_mask) != cur_mask)
+					cur_neededBit_num++;
+				else
+					// 被占用,清零
+					cur_neededBit_num = 0;
+
+				// 空闲bit数符合要求
+				if (cur_neededBit_num == need_num)
+				{
+					done_flag = 1;
+				}
+
+				if (done_flag)
+					break;
+				// mask最低位为1, 说明8个bit已读完
+				if ((cur_mask & 0x01) == 0x01)
+				{
+					// 重新初始化为高位
+					cur_mask = 0x80;
+				}
+				// 位为1,右移1位，检查下一位是否可用
+				else
+					cur_mask >>= 1;
 			}
-			// 位为1,右移1位，检查下一位是否可用
-			else
-				mask >>= 1;
+			if (done_flag)
+				break;
 		}
-		// 跳出上面的循环有两种可能，一种是tmp==num，说明已经找到了连续空间
-		// 另外一种是tmp<num说明这片连续空间不够大，要更新start_blk的位置
-		// tmp为找到的可用连续块数目
-		if (tmp > max)
-		{
-			// 记录这个连续块的起始位
-			max_start = *start_blk;
-			max = tmp;
-		}
-		// 如果后来找到的连续块数目少于之前找到的，不做替换
-		// 找到了num个连续的空白块
-		if (tmp == num)
+		if (done_flag)
 			break;
-		// 只找到了tmp个可用block，小于num，要重新找，更新起始块号
-		*start_blk = (tmp + 1) + *start_blk;
-		tmp = 0;
-		// 找不到空闲块
+
+		// 增加已经遍历的块号
+		iter_blk_num++;
 	}
 
-	// 检查是否合法, 到了最后了
-	// if (cur_blk == max_data_bitmap - 1)
-	// {
-	// 	ret = -1;
-	// 	goto error;
-	// }
+	// 检查是否到了最后还是不满足
+	if (cur_blk == max_data_bitmap - 1 && iter_byte_num == max_num_perblk - 1 && iter_bit_num == 7)
+	{
+		ret = -1;
+		printError("getFreeDataBlk: data bitmap has no blk.");
+		goto error;
+	}
 
-	int j = max_start;
-	int i;
-	// 将这片连续空间在bitmap中标记为1
+	// 计算开始的块号
+	*start_blk = iter_blk_num * FS_BLOCK_SIZE * 8 + iter_byte_num * 8 + iter_bit_num - need_num + 1;
+
+	// 标记bitmap
 	for (i = 0; i < max; i++)
 	{
 		if (set_blk_use(j++, 1) == -1)
 		{
-			printf("错误：get_empty_blk：set_blk_use失败，函数结束返回\n\n");
-			free(flag);
+
 			return -1;
 		}
 	}
-	printf("get_empty_blk：申请空间成功，函数结束返回\n\n");
-	free(flag);
+	printSuccess("getFreeDataBlk: malloc data blk success!");
 
 error:
 	fclose(fp);
 	free(sp_blk);
+	free(temp_unit);
 	return ret;
 }
 

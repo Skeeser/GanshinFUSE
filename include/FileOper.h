@@ -27,6 +27,9 @@ int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getInodeBlkByPath(const char *path, short int *file_inode);
 int getFreeInodeBlk(const int need_num, long *start_blk);
 
+// Bitmap
+int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int num);
+
 // Utils
 void fillStatByInode(struct GInode *inode, struct stat *st);
 short int retShortIntFromData(const char *data, const int offset);
