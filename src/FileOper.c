@@ -294,7 +294,7 @@ int getFreeDataBlk(const int need_num, long *start_blk)
 	int done_flag = 0;
 
 	// 检查数据区bitmap, 不断循环直到找到符合条件的连续n块空闲块
-	for (cur_blk < max_data_bitmap)
+	while (cur_blk < max_data_bitmap)
 	{
 		unsigned char cur_mask = 0x80;
 		// 遍历块中的每一个Byte
@@ -376,7 +376,7 @@ int getFreeInodeBlk(const int need_num, long *start_blk)
 	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
 	unsigned char *temp_unit = malloc(sizeof(unsigned char)); // 8bits
 	getSuperBlock(sp_blk);
-	const long start_inode_bitmap = sp_blk.fir;
+	const long start_inode_bitmap = sp_blk->first_blk_of_inodebitmap;
 	const long max_inode_size = sp_blk->inodebitmap_size;
 	const long max_inode_bitmap = start_inode_bitmap + max_inode_size;
 	const int max_num_perblk = FS_BLOCK_SIZE;
@@ -392,15 +392,15 @@ int getFreeInodeBlk(const int need_num, long *start_blk)
 		goto error;
 	}
 
-	// 移动指针到文件的DataBitmap块
-	if (fseek(fp, FS_BLOCK_SIZE * start_data_bitmap, SEEK_SET) != 0)
+	// 移动指针到文件的inodeBitmap块
+	if (fseek(fp, FS_BLOCK_SIZE * start_inode_bitmap, SEEK_SET) != 0)
 	{
 		ret = -1;
-		printError("getFreeInodeBlk: DataBitmap fseek failed!");
+		printError("getFreeInodeBlk: inodeBitmap fseek failed!");
 		goto error;
 	}
 
-	long cur_blk = start_data_bitmap;
+	long cur_blk = start_inode_bitmap;
 	// 已经遍历的块数量
 	long iter_blk_num = 0;
 	// 已经遍历的byte数量
@@ -413,7 +413,7 @@ int getFreeInodeBlk(const int need_num, long *start_blk)
 	int done_flag = 0;
 
 	// 检查数据区bitmap, 不断循环直到找到符合条件的连续n块空闲块
-	for (cur_blk < max_data_bitmap)
+	while (cur_blk < max_inode_bitmap)
 	{
 		unsigned char cur_mask = 0x80;
 		// 遍历块中的每一个Byte
@@ -461,10 +461,10 @@ int getFreeInodeBlk(const int need_num, long *start_blk)
 	}
 
 	// 检查是否到了最后还是不满足
-	if (cur_blk == max_data_bitmap - 1 && iter_byte_num == max_num_perblk - 1 && iter_bit_num == 7)
+	if (cur_blk == max_inode_bitmap - 1 && iter_byte_num == max_num_perblk - 1 && iter_bit_num == 7)
 	{
 		ret = -1;
-		printError("getFreeInodeBlk: data bitmap has no blk.");
+		printError("getFreeInodeBlk: inode bitmap has no blk.");
 		goto error;
 	}
 
@@ -472,13 +472,13 @@ int getFreeInodeBlk(const int need_num, long *start_blk)
 	*start_blk = iter_blk_num * FS_BLOCK_SIZE * 8 + iter_byte_num * 8 + iter_bit_num - need_num + 1;
 
 	// 标记已经使用的块号
-	if ((ret = setBitmapUsed(start_data_bitmap, need_num, *start_blk)) != 0)
+	if ((ret = setBitmapUsed(start_inode_bitmap, need_num, *start_blk)) != 0)
 	{
 
 		printError("getFreeInodeBlk: set bitmap failed!");
 		goto error;
 	}
-	printSuccess("getFreeInodeBlk: malloc data blk success!");
+	printSuccess("getFreeInodeBlk: malloc inode blk success!");
 
 error:
 	fclose(fp);
