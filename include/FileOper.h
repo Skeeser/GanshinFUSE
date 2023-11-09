@@ -19,10 +19,12 @@ int checkFilePath(const char *path);
 
 // Data
 int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk);
+int writeDataByBlkId(short int blk_id, struct GDataBlock *data_blk);
 int getFreeDataBlk(const int need_num, long *start_blk);
 
 // Inode
 int getInodeByBlkId(short int blk_id, struct GInode *inode_blk);
+int writeInodeByBlkId(short int blk_id, struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getInodeBlkByPath(const char *path, short int *file_inode);
 int getFreeInodeBlk(const int need_num, long *start_blk);

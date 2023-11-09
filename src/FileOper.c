@@ -47,6 +47,48 @@ int getDataByBlkId(short int blk_id, struct GDataBlock *data_blk)
 	fclose(fp);
 	return 0;
 }
+
+// 根据块号, 将文件数据GDataBlock写入文件
+int writeDataByBlkId(short int blk_id, struct GDataBlock *data_blk)
+{
+
+	// 读取文件
+	FILE *fp = NULL;
+	fp = fopen(DISK_PATH, "r+"); // 打开文件
+	if (fp == NULL)
+	{
+		printError("writeDataByBlkId: Open disk file failed! The file may don't exits.");
+		printf("disk_path: %s\n", DISK_PATH);
+		return -1;
+	}
+	// printSuccess("Open disk file success!");
+
+	// 文件打开后，就用blk_id * FS_BLOCK_SIZE作为偏移量
+	fseek(fp, blk_id * FS_BLOCK_SIZE, SEEK_SET);
+
+	if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) > 0)
+	{
+		printSuccess("writeDataByBlkId: Read data block success!");
+	}
+	else
+	{
+		printError("writeDataByBlkId: Read data block failed!");
+		fclose(fp);
+		return -1;
+	}
+
+	// 判断是否正确读取
+	if (ferror(fp))
+	{
+		printError("writeDataByBlkId: Read disk file failed!");
+		fclose(fp);
+		return -1;
+	}
+
+	fclose(fp);
+	return 0;
+}
+
 // 根据块号, 读取Inode
 int getInodeByBlkId(short int blk_id, struct GInode *inode_blk)
 {
@@ -58,9 +100,24 @@ int getInodeByBlkId(short int blk_id, struct GInode *inode_blk)
 		free(gblk);
 		return ret;
 	}
-	// 复制内存
-	// error
-	// temp_inode = (struct GInode *)gblk;
+
+	memcpy(inode_blk, (struct GInode *)gblk, sizeof(struct GInode));
+	// free(temp_inode);
+	free(gblk);
+	return 0;
+}
+
+// 根据块号, 写入Inode
+int writeInodeByBlkId(short int blk_id, struct GInode *inode_blk)
+{
+	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
+	// struct GInode *temp_inode = malloc(sizeof(struct GInode));
+	int ret = getDataByBlkId(blk_id, gblk);
+	if (ret != 0)
+	{
+		free(gblk);
+		return ret;
+	}
 
 	memcpy(inode_blk, (struct GInode *)gblk, sizeof(struct GInode));
 	// free(temp_inode);
@@ -501,29 +558,27 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	{
 		int i = hash_num / FD_PER_BLK;
 		short int addr = temp_inode->addr[i];
+		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 
-		// 地址未被创建
-		if (addr < 0)
+		if (addr < 0) // 地址未被创建
 		{
 			// 根据data bitmap, 找到空闲块
-			short int free_data_block = -1;
-			getFreeDataBlk(1, &free_data_block);
+			getFreeDataBlk(1, &addr);
 			// 将块号赋值给原本未被创建的addr的位置
-			temp_inode->addr[i] = free_data_block;
-			// 将该数据块的file dir中的size全部初始化为0
-			getDataByBlkId(free_data_block, data_blk);
-			for (int i = 0; i <)
-				getFileDirFromDataBlk(data_blk, );
-		}
-		else
-		{
-			// 地址已被创建
+			temp_inode->addr[i] = addr;
+			// 将该数据块的GDataBlock中的size全部初始化为0
 			getDataByBlkId(addr, data_blk);
-			int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-			getFileDirFromDataBlk(data_blk, offset, p_filedir);
+			data_blk->size = 0;
+			writeDataByBlkId(addr, data_blk);
+		}
+		else // 地址已被创建
+		{
+			getDataByBlkId(addr, data_blk);
+			// getFileDirFromDataBlk(data_blk, offset, p_filedir);
 		}
 
 		// 目录的inode中增加st_size
+
 		// 更新目录的inode st_atim
 		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
 		// 初始化新的inode
