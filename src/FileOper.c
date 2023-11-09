@@ -506,12 +506,18 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		if (addr < 0)
 		{
 			// 根据data bitmap, 找到空闲块
+			short int free_data_block = -1;
+			getFreeDataBlk(1, &free_data_block);
 			// 将块号赋值给原本未被创建的addr的位置
+			temp_inode->addr[i] = free_data_block;
 			// 将该数据块的file dir中的size全部初始化为0
+			getDataByBlkId(free_data_block, data_blk);
+			for (int i = 0; i <)
+				getFileDirFromDataBlk(data_blk, );
 		}
-		// 地址已被创建
 		else
 		{
+			// 地址已被创建
 			getDataByBlkId(addr, data_blk);
 			int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 			getFileDirFromDataBlk(data_blk, offset, p_filedir);
@@ -682,7 +688,6 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 	if (ret != 0)
 	{
 		printError("getFileDirToAttr:check file path failed!");
-		free(data_blk);
 		return ret;
 	}
 
@@ -693,7 +698,6 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 		attr->flag = 2; // 2 menu
 		attr->nMenuInode = start_inode;
 		attr->nInodeBlock = start_inode;
-		free(data_blk);
 		printSuccess("getFileDirToAttr: this is a root menu");
 		return ret;
 	}
@@ -773,7 +777,6 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 				{
 				error:
 					free(p_fd);
-					free(data_blk);
 					free(free_tmp_path);
 					return -1;
 				}
@@ -789,7 +792,6 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 	}
 
 	free(free_tmp_path);
-	free(data_blk);
 	printSuccess("getFileDirToAttr: success!");
 	return 0;
 }
@@ -802,7 +804,7 @@ short int retShortIntFromData(const char *data, const int offset)
 	return result;
 }
 
-// 给定GDataBlock中char* 将data 解读成GFileDir
+// 给定GDataBlock中char* 将data 解读成GFileDir offset以Byte为单位
 void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, struct GFileDir *p_fd)
 {
 	memcpy(p_fd, &(data_blk->data[offset]), sizeof(struct GFileDir));
