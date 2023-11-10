@@ -229,6 +229,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk)
 {
 	int ret = 0;
+
 	// 增加大小
 	data_blk->size += sizeof(struct GFileDir);
 	// 写入
@@ -574,6 +575,7 @@ int initInode(struct GInode *inode)
 	// 磁盘地址有7个, addr[0]-addr[3]是直接地址，addr[4]是一次间接，
 	// addr[5]是二次间接，addr[6]是三次间接。
 	memset(inode->addr, -1, sizeof(inode->addr));
+	printSuccess("initInode: success!");
 	return ret;
 }
 
@@ -590,6 +592,7 @@ void getAddrAndDataBlk(const addr_i, short int *addr, struct GInode *menu_inode,
 		// 将该数据块的GDataBlock中的size全部初始化为0
 		getDataByBlkId(addr, data_blk);
 		data_blk->size = 0;
+		initShortIntToData(data_blk->data);
 		// writeDataByBlkId(addr, data_blk);
 	}
 	else // 地址已被创建
@@ -597,6 +600,25 @@ void getAddrAndDataBlk(const addr_i, short int *addr, struct GInode *menu_inode,
 		getDataByBlkId(addr, data_blk);
 		// getFileDirFromDataBlk(data_blk, offset, p_filedir);
 	}
+}
+
+// 因为写进了file dir, 更新menu的inode
+int updateMenuInode(const short int cur_i, struct GInode *menu_inode)
+{
+	int ret = 0;
+	// 目录的inode中增加st_size
+	menu_inode->st_size += sizeof(struct GFileDir);
+	// 更新目录的inode st_atim
+	time_t currentTime;
+	currentTime = time(NULL); // 获取当前时间
+	if (currentTime == (time_t)-1)
+		printError("Inode get time failed!");
+	else
+		printSuccess("Inode get time success!");
+	menu_inode->st_atim = currentTime;
+	// 写进menu_inode
+	ret = writeInodeByBlkId(cur_i, menu_inode);
+	return ret;
 }
 
 // 根据哈希值在menu中创建file dir, cur_i是当前菜单的inode号
@@ -619,18 +641,8 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 获取地址和data blk
 		getAddrAndDataBlk(i, &addr, menu_inode, data_blk);
 
-		// 目录的inode中增加st_size
-		menu_inode->st_size += sizeof(struct GFileDir);
-		// 更新目录的inode st_atim
-		time_t currentTime;
-		currentTime = time(NULL); // 获取当前时间
-		if (currentTime == (time_t)-1)
-			printError("Inode get time failed!");
-		else
-			printSuccess("Inode get time success!");
-		menu_inode->st_atim = currentTime;
-		// 写进menu_inode
-		writeInodeByBlkId(cur_i, menu_inode);
+		// 更新menu inode
+		updateMenuInode(cur_i, menu_inode);
 
 		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
 		short int temp_free_inode = -1;
@@ -639,6 +651,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		initInode(temp_inode);
 		// 将新inode写进文件
 		writeInodeByBlkId(temp_free_inode, temp_inode);
+
 		// 更新传进来的file dir
 		p_filedir->nInodeBlock = temp_free_inode;
 		// 将file dir写入到data blk中
@@ -650,14 +663,16 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	{
 		// 一次间接块  4
 		short int addr = menu_inode->addr[4];
-		if (addr < 0)
-			goto error;
+		// 获取地址和data blk
+		getAddrAndDataBlk(4, &addr, menu_inode, data_blk);
+
+		// 更新addr
 		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
-		getDataByBlkId(addr, data_blk);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
+
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+		// getFileDirFromDataBlk(data_blk, offset, p_filedir);
 	}
 	else if (hash_num < FD_SECOND_INDIR)
 	{
@@ -919,6 +934,32 @@ short int retShortIntFromData(const char *data, const int offset)
 	// 使用位运算将两个字节的数据合并成一个 short int
 	short int result = ((uint16_t)data[offset + 1] << 8) | (uint16_t)data[offset];
 	return result;
+}
+
+// 将short int写入到data中, 采用小端序编码
+int writeShortIntToData(const short int addr, const int offset, char *data)
+{
+	int ret = 0;
+	for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
+	{
+		uint16_t init_num = addr;
+		data[i] = (init_num & 0x00FF);
+		data[i + 1] = (init_num & 0xFF00) >> 8;
+	}
+	printSuccess("writeShortIntToData: success!");
+	return ret;
+}
+
+// 初始化目录间接索引的short int全部为-1
+void initShortIntToData(char *data)
+{
+	for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
+	{
+		uint16_t init_num = -1;
+		data[i] = (init_num & 0x00FF);
+		data[i + 1] = (init_num & 0xFF00) >> 8;
+	}
+	printSuccess("initShortIntToData: success!");
 }
 
 // 给定GDataBlock中char* 将data 解读成GFileDir offset以Byte为单位
