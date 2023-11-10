@@ -579,7 +579,7 @@ int initInode(struct GInode *inode)
 	return ret;
 }
 
-// 根据传入的addr, 修改addr并且获取data blk, 只适合直接索引情况
+// 根据传入的addr, 修改addr并且获取data blk, 第0层索引, 即addr是从inode中得到
 void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk)
 {
 
@@ -590,6 +590,8 @@ void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk)
 		// 将该数据块的GDataBlock中的size全部初始化为0
 		getDataByBlkId(*addr, data_blk);
 		data_blk->size = 0;
+		// 将data中的short int 置-1, 可能init到了存储file dir的块
+		initShortIntToData(data_blk->data);
 	}
 	else // 地址已被创建
 	{
@@ -598,16 +600,22 @@ void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk)
 	}
 }
 
-// 根据传入的addr, 修改addr并且获取data blk, 适用于间接索引
-void getAddrDataIndirectIndex(const int offset, short int *addr, struct GDataBlock *data_blk)
+// 根据传入的addr, 修改addr并且获取data blk, 适用于0层以上索引, 即addr不是从inode中得到
+void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlock *data_blk)
 {
-
-	if (*addr < 0) // 地址未被创建
+	const short int old_addr = *addr;
+	const short int new_addr = retShortIntFromData(data_blk->data, offset);
+	if (new_addr < 0) // 地址未被创建
 	{
+		// 赋值原来的addr
+		// short int old_addr = *addr;
 		// 根据data bitmap, 找到空闲块
 		getFreeDataBlk(1, addr);
 		// 将获得的addr写入原来的位置
 		writeShortIntToData(addr, offset, data_blk->data);
+		data_blk->size += sizeof(short int);
+		// 将data写进文件
+		writeDataByBlkId(old_addr, data_blk);
 		// 将该数据块的GDataBlock中的size全部初始化为0
 		getDataByBlkId(*addr, data_blk);
 		data_blk->size = 0;
@@ -659,8 +667,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		int offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 
 		// 获取地址和data blk
-		getAddrAndDataBlk(addr, data_blk);
-
+		getAddrDataDirectIndex(addr, data_blk);
 		// 更新menu inode
 		updateMenuInode(cur_i, menu_inode);
 
@@ -682,62 +689,104 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	else if (hash_num < FD_FIRST_INDIR)
 	{
 		// 一次间接块  4
-		short int *addr = menu_inode->addr[4];
+		short int *addr = &menu_inode->addr[4];
 		// 获取地址和data blk
-		getAddrAndDataBlk(addr, data_blk);
+		getAddrDataDirectIndex(addr, data_blk);
 
 		// 更新addr
 		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
-		short int addr = retShortIntFromData(data_blk->data, offset);
-		getAddrAndDataBlk(&addr, data_blk);
+		getAddrDataIndirectIndex(addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		// getFileDirFromDataBlk(data_blk, offset, p_filedir);
+		// 更新menu inode
+		updateMenuInode(cur_i, menu_inode);
+
+		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
+		short int temp_free_inode = -1;
+		getFreeInodeBlk(1, &temp_free_inode);
+		// 初始化新的inode
+		initInode(temp_inode);
+		// 将新inode写进文件
+		writeInodeByBlkId(temp_free_inode, temp_inode);
+
+		// 更新传进来的file dir
+		p_filedir->nInodeBlock = temp_free_inode;
+		// 将file dir写入到data blk中
+		writeFileDirToDataBlk(p_filedir, offset, data_blk);
+		// 将data blk写入到文件
+		writeDataByBlkId(*addr, data_blk);
 	}
 	else if (hash_num < FD_SECOND_INDIR)
 	{
 		// 二次间接块  5
-		short int addr = menu_inode->addr[5];
-		if (addr < 0)
-			goto error;
-		getDataByBlkId(addr, data_blk);
+		short int *addr = &menu_inode->addr[5];
+		// 获取地址和data blk
+		getAddrDataDirectIndex(addr, data_blk);
+
 		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);
-		addr = retShortIntFromData(data_blk->data, offset);
-		getDataByBlkId(addr, data_blk);
+		getAddrDataIndirectIndex(addr, offset, data_blk);
 
 		offset = offset * FD_PER_BLK;
-		addr = retShortIntFromData(data_blk->data, offset);
-		getDataByBlkId(addr, data_blk);
+		getAddrDataIndirectIndex(addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+		// 更新menu inode
+		updateMenuInode(cur_i, menu_inode);
+
+		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
+		short int temp_free_inode = -1;
+		getFreeInodeBlk(1, &temp_free_inode);
+		// 初始化新的inode
+		initInode(temp_inode);
+		// 将新inode写进文件
+		writeInodeByBlkId(temp_free_inode, temp_inode);
+
+		// 更新传进来的file dir
+		p_filedir->nInodeBlock = temp_free_inode;
+		// 将file dir写入到data blk中
+		writeFileDirToDataBlk(p_filedir, offset, data_blk);
+		// 将data blk写入到文件
+		writeDataByBlkId(*addr, data_blk);
 	}
 	else if (hash_num < MAX_HASH_SIZE)
 	{
 		// 三次间接块  6
-		short int addr = menu_inode->addr[6];
-		if (addr < 0)
-			goto error;
-		getDataByBlkId(addr, data_blk);
+		short int *addr = &menu_inode->addr[6];
+		// 获取地址和data blk
+		getAddrDataDirectIndex(addr, data_blk);
+
 		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);
-		addr = retShortIntFromData(data_blk->data, offset);
-		getDataByBlkId(addr, data_blk);
+		getAddrDataIndirectIndex(addr, offset, data_blk);
 
 		offset = offset * FD_PER_BLK;
-		addr = retShortIntFromData(data_blk->data, offset);
-		getDataByBlkId(addr, data_blk);
+		getAddrDataIndirectIndex(addr, offset, data_blk);
 
 		offset = offset * FD_PER_BLK;
-		addr = retShortIntFromData(data_blk->data, offset);
-		getDataByBlkId(addr, data_blk);
+		getAddrDataIndirectIndex(addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
-		getFileDirFromDataBlk(data_blk, offset, p_filedir);
+		// 更新menu inode
+		updateMenuInode(cur_i, menu_inode);
+
+		// 根据inode bitmap, 找到空闲块, 作为创建文件的inode, 并将inode号赋值给传入的p_filedir
+		short int temp_free_inode = -1;
+		getFreeInodeBlk(1, &temp_free_inode);
+		// 初始化新的inode
+		initInode(temp_inode);
+		// 将新inode写进文件
+		writeInodeByBlkId(temp_free_inode, temp_inode);
+
+		// 更新传进来的file dir
+		p_filedir->nInodeBlock = temp_free_inode;
+		// 将file dir写入到data blk中
+		writeFileDirToDataBlk(p_filedir, offset, data_blk);
+		// 将data blk写入到文件
+		writeDataByBlkId(*addr, data_blk);
 	}
 	else
 	{
 		ret = -1;
-		printf("getFileDirByHash: the file may be not exited.\n");
+		printf("createFileDirByHash: the file may be not exited.\n");
 		goto error;
 	}
 
