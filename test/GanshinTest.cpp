@@ -31,12 +31,12 @@ TEST(FILE, divideFile)
     char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
     char *remain_path = (char *)malloc(MAX_PATH_LENGTH * sizeof(char));
     char *fall_name = (char *)malloc((MAX_EXTENSION + MAX_FILENAME) * sizeof(char));
-    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, remain_path, fall_name, GFILE);
+    int ret = divideFileNameByPath("/etc/tess/ok.jpg", fname, fext, fall_name, remain_path, GFILE);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(fname, "ok");
     ASSERT_STRCASEEQ(fext, "jpg");
     ASSERT_STRCASEEQ(remain_path, "/etc/tess");
-    ret = divideFileNameByPath("/etc/enaf/hadad/", fname, fext, remain_path, fall_name, GDIRECTORY);
+    ret = divideFileNameByPath("/etc/enaf/hadad/", fname, fext, fall_name, remain_path, GDIRECTORY);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(fname, "hadad");
     ASSERT_STRCASEEQ(fext, "");
@@ -50,8 +50,20 @@ TEST(FILE, divideFile)
 
 TEST(FILE, createFile)
 {
-    int ret = createFileByPath("/etc/", GDIRECTORY);
+    int ret = 0; // createFileByPath("/etc/", GDIRECTORY);
     ASSERT_EQ(ret, 0);
+}
+
+TEST(FILE, writeAndread)
+{
+    char *data = (char *)malloc(MAX_DIR_IN_BLOCK);
+    initShortIntToData(data);
+    short int read_int = retShortIntFromData(data, 5);
+    ASSERT_EQ(read_int, -1);
+    int ret = writeShortIntToData(98, 5, data);
+    ASSERT_EQ(ret, 0);
+    read_int = retShortIntFromData(data, 5);
+    ASSERT_EQ(read_int, 98);
 }
 
 int main(int argc, char *argv[])

@@ -136,6 +136,7 @@ static void initInode(FILE *const fp)
     }
 
     struct GInode *const root = malloc(sizeof(struct GInode));
+    struct GDataBlock *const data_blk = malloc(sizeof(struct GDataBlock));
     // 为根目录的 struct GInode 对象赋值
     root->st_mode = 0755;      // 权限，例如 rwxr-xr-x
     root->st_ino = 0;          // i-node号为0
@@ -163,8 +164,11 @@ static void initInode(FILE *const fp)
     // const int data_first_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + INODE_BLOCK;
     // 根目录指向data区的一个块地址
     // root->addr[0] = data_first_block;
-    fwrite(root, sizeof(struct GInode), 1, fp); // 写入磁盘，初始化完成
+    data_blk->size += sizeof(struct GInode);
+    memcpy(data_blk->data, root, sizeof(struct GInode));
+    fwrite(data_blk, sizeof(struct GDataBlock), 1, fp); // 写入磁盘，初始化完成
     free(root);
+    free(data_blk);
     printSuccess("Initial Inode success!");
 }
 

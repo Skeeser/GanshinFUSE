@@ -20,16 +20,18 @@ int checkFilePath(const char *path);
 // Data
 int getDataByBlkId(const short int blk_id, struct GDataBlock *data_blk);
 int writeDataByBlkId(const short int blk_id, const struct GDataBlock *data_blk);
-int getFreeDataBlk(const int need_num, long *start_blk);
-void getAddrAndDataBlk(const addr_i, short int *addr, struct GInode *menu_inode, struct GDataBlock *data_blk);
+int getFreeDataBlk(const int need_num, short int *start_blk);
+void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk);
+void getAddrDataIndirectIndex(const int offset, short int *addr, struct GDataBlock *data_blk);
 void initShortIntToData(char *data);
+int writeShortIntToData(const short int addr, const int offset, char *data);
 
 // Inode
 int getInodeByBlkId(const short int blk_id, struct GInode *inode_blk);
 int writeInodeByBlkId(const short int blk_id, const struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getInodeBlkByPath(const char *path, short int *file_inode);
-int getFreeInodeBlk(const int need_num, long *start_blk);
+int getFreeInodeBlk(const int need_num, short int *start_blk);
 int initInode(struct GInode *inode);
 int updateMenuInode(const short int cur_i, struct GInode *menu_inode);
 
