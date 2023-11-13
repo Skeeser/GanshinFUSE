@@ -50,8 +50,14 @@ TEST(FILE, divideFile)
 
 TEST(FILE, createFile)
 {
-    int ret = 0; // createFileByPath("/etc/", GDIRECTORY);
+    int ret = createFileByPath("/test.jpg", GFILE);
     ASSERT_EQ(ret, 0);
+    struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+    ret = getFileDirByPath("/test.jpg", fd);
+    ASSERT_STRCASEEQ(fd->fname, "test");
+    ASSERT_STRCASEEQ(fd->fext, "jpg");
+    ASSERT_EQ(fd->fsize, 0);
+    free(fd);
 }
 
 TEST(FILE, writeAndread)
