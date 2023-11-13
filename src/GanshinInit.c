@@ -55,16 +55,16 @@ static void initInodeBitmap(FILE *const fp)
     const int inode_bitmap_bit = INODE_BITMAP * FS_BLOCK_SIZE * 8;
 
     // 第一个Byte的第一个bit置1
-    int temp_data = 0;
-    int mask = 1;
-    mask <<= 31;
+    unsigned char temp_data = 0x00;
+    unsigned char mask = 0x01;
+    mask <<= 7;
     temp_data |= mask;
 
-    fwrite(&temp_data, sizeof(int), 1, fp);
+    fwrite(&temp_data, sizeof(unsigned char), 1, fp);
 
     // 接着是剩余的部分置0,
-    int rest_of_bitmap = (inode_bitmap_bit - 32) / 32;
-    int rest_data[rest_of_bitmap];
+    int rest_of_bitmap = (inode_bitmap_bit - 8) / 8;
+    unsigned char rest_data[rest_of_bitmap];
     memset(rest_data, 0, sizeof(rest_data));
     fwrite(rest_data, sizeof(rest_data), 1, fp);
 
@@ -94,28 +94,28 @@ static void initDataBitmap(FILE *const fp)
     const int data_bitmap_bit = DATA_BITMAP * FS_BLOCK_SIZE * 8;
     const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + 1;
 
-    const int int_block_num = used_block / 32;
-    if (int_block_num)
+    const int byte_block_num = used_block / 8;
+    if (byte_block_num)
     {
-        int a[int_block_num];
-        memset(a, 0xFFFFFFFF, sizeof(a));
+        unsigned char a[byte_block_num];
+        memset(a, 1, sizeof(a));
         fwrite(a, sizeof(a), 1, fp);
     }
 
-    int temp_data = 0;
-    const int rest_used_block = used_block % 32;
+    unsigned char temp_data = 0x00;
+    const int rest_used_block = used_block % 8;
     // 利用循环置1
     for (int i = 0; i < rest_used_block; i++)
     {
-        int mask = 1;
-        mask <<= (31 - i);
+        unsigned char mask = 0x01;
+        mask <<= (7 - i);
         temp_data |= mask;
     }
-    fwrite(&temp_data, sizeof(int), 1, fp);
+    fwrite(&temp_data, sizeof(unsigned char), 1, fp);
 
     // 接着是剩余的部分置0,
-    const int rest_of_bitmap = (data_bitmap_bit - int_block_num * 32 - 32) / 32;
-    int rest_data[rest_of_bitmap];
+    const int rest_of_bitmap = (data_bitmap_bit - byte_block_num * 8 - 8) / 8;
+    unsigned char rest_data[rest_of_bitmap];
     memset(rest_data, 0, sizeof(rest_data));
     fwrite(rest_data, sizeof(rest_data), 1, fp);
 
