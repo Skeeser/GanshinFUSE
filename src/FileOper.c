@@ -27,7 +27,8 @@ int getDataByBlkId(const short int blk_id, struct GDataBlock *data_blk)
 	memset(data_blk, 0, sizeof(struct GDataBlock));
 	if (fread(data_blk, sizeof(struct GDataBlock), 1, fp) > 0)
 	{
-		printSuccess("getDataByBlkId: Read data block success!");
+		// printSuccess("getDataByBlkId: Read data block success!");
+		;
 	}
 	else
 	{
@@ -359,8 +360,6 @@ int getFreeDataBlk(const int need_num, short int *start_blk)
 		// 遍历块中的每一个Byte
 		for (iter_byte_num = 0; iter_byte_num < max_num_perblk; iter_byte_num++)
 		{
-			unsigned char debug_data[1024];
-			fread(debug_data, sizeof(unsigned char) * 1024, 1, fp);
 			// 读出8个bit
 			fread(temp_unit, sizeof(unsigned char), 1, fp);
 			const unsigned char cur_byte = *temp_unit;
