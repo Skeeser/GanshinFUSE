@@ -270,7 +270,7 @@ int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int 
 	// 返回之前的指针
 	fseek(fp, -1, SEEK_CUR);
 	// 处理开头的offset的bit情况
-	for (int i = 0; i < num % (8 - offset_temp_bit); i++)
+	for (int i = 0; i < min(num, (8 - offset_temp_bit)); i++)
 	{
 		unsigned char mask = 0x80;
 		mask >>= (offset_temp_bit + i);
@@ -283,7 +283,7 @@ int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int 
 	if (set_byte_num)
 	{
 		unsigned char a[set_byte_num];
-		memset(a, 1, sizeof(a));
+		memset(a, 0xFF, sizeof(a));
 		fwrite(a, sizeof(a), 1, fp);
 	}
 
@@ -297,7 +297,7 @@ int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int 
 	for (int i = 0; i < rest_used_bit; i++)
 	{
 		unsigned char mask = 0x01;
-		mask <<= (8 - i);
+		mask <<= (7 - i);
 		temp_byte |= mask;
 	}
 	fwrite(&temp_byte, sizeof(int), 1, fp);
@@ -314,6 +314,7 @@ int getFreeDataBlk(const int need_num, short int *start_blk)
 	int ret = 0;
 
 	// 读入超级块
+	// todo: 优化成直接使用config中的数据?
 	struct GSuperBlock *sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
 	unsigned char *temp_unit = malloc(sizeof(unsigned char)); // 8bits
 	getSuperBlock(sp_blk);
@@ -413,7 +414,7 @@ int getFreeDataBlk(const int need_num, short int *start_blk)
 	*start_blk = iter_blk_num * FS_BLOCK_SIZE * 8 + iter_byte_num * 8 + iter_bit_num - need_num + 1;
 
 	// 标记已经使用的块号
-	if ((ret = setBitmapUsed(start_data_bitmap, need_num, *start_blk)) != 0)
+	if ((ret = setBitmapUsed(start_data_bitmap, *start_blk, need_num)) != 0)
 	{
 
 		printError("getFreeDataBlk: set bitmap failed!");
@@ -580,7 +581,7 @@ int initInode(struct GInode *inode)
 	return ret;
 }
 
-// 根据传入的addr, 修改addr并且获取data blk, 第0层索引, 即addr是从inode中得到
+// 根据传入的addr, 直接修改menu的addr并且获取data blk, 第0层索引, 即addr是从inode中得到
 void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk)
 {
 
@@ -611,6 +612,7 @@ void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlo
 		// 赋值原来的addr
 		// short int old_addr = *addr;
 		// 根据data bitmap, 找到空闲块
+		*addr = -1;
 		getFreeDataBlk(1, addr);
 		// 将获得的addr写入原来的位置
 		writeShortIntToData(*addr, offset, data_blk->data);

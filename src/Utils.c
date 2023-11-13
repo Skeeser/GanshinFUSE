@@ -56,3 +56,9 @@ int getDebugByteData(FILE *fp)
     fread(debug_data, sizeof(unsigned char) * 1024, 1, fp);
     return ret;
 }
+
+// 返回int最小值
+int min(int a, int b)
+{
+    return a < b ? a : b;
+}

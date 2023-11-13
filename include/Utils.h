@@ -18,4 +18,6 @@ void printSuccess(const char *str);
 
 int hash(const char *in_str);
 int getDebugByteData(FILE *fp);
+int min(int a, int b);
+
 #endif
