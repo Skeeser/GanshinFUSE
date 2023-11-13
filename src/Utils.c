@@ -47,3 +47,12 @@ int hash(const char *in_str)
     }
     return hash;
 }
+
+// 用来查看文件的某段数据
+int getDebugByteData(FILE *fp)
+{
+    int ret = 0;
+    unsigned char debug_data[1024];
+    fread(debug_data, sizeof(unsigned char) * 1024, 1, fp);
+    return ret;
+}
