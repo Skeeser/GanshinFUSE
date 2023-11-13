@@ -612,7 +612,7 @@ void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlo
 		// 根据data bitmap, 找到空闲块
 		getFreeDataBlk(1, addr);
 		// 将获得的addr写入原来的位置
-		writeShortIntToData(addr, offset, data_blk->data);
+		writeShortIntToData(*addr, offset, data_blk->data);
 		data_blk->size += sizeof(short int);
 		// 将data写进文件
 		writeDataByBlkId(old_addr, data_blk);
@@ -1271,8 +1271,8 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_n
 				char *tmp_ext = ++dot_ret;
 				if (checkFileFname(tmp_name) == 0 && checkFileFext(tmp_ext) == 0)
 				{
-					memcpy(fname, tmp_name, strlen(tmp_name));
-					memcpy(fext, tmp_ext, strlen(tmp_ext));
+					memcpy(fname, tmp_name, strlen(tmp_name) + 1);
+					memcpy(fext, tmp_ext, strlen(tmp_ext) + 1);
 				}
 				else
 				{
@@ -1330,19 +1330,23 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 	}
 
 	// 检查该文件或目录是否已经存在
-	if ((ret = getFileDirByPath(path, file_dir)) == 0)
+	if (getFileDirByPath(path, file_dir) == 0)
 	{
 		ret = -1;
 		printError("createFileByPath: the file already exit.");
 		goto error;
+	}
+	else
+	{
+		printSuccess("createFileByPath: getFileDirByHash failed is right! not exit already.");
 	}
 
 	// 不存在, 则创建新的
 	int hash_num = hash(fall_name);
 
 	// 赋值file_dir
-	memcpy(file_dir->fname, fname, strlen(fname));
-	memcpy(file_dir->fext, fext, strlen(fext));
+	memcpy(file_dir->fname, fname, strlen(fname) + 1);
+	memcpy(file_dir->fext, fext, strlen(fext) + 1);
 	// 文件大小初始化为0
 	file_dir->fsize = 0;
 	file_dir->nMenuInode = menu_inode_num;

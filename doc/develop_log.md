@@ -213,6 +213,14 @@ i节点, 根目录指向data区的一个块地址
 
 <br>
 
+## 常见问题
+Q: str的memcpy, 字符串不对?  
+A: 注意len()要加一, 把'\0'也复制  
+--- 
+
+<br>
+
+
 ## 参考资料
 
 - [inode 详解](https://www.cnblogs.com/llife/p/11470668.html)

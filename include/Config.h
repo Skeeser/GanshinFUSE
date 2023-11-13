@@ -44,13 +44,13 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #define INODE_BLOCK 512   // Block
 #define INODE_SIZE 64     // Byte
 
-#define MAX_FILE_NUM FS_BLOCK_SIZE *INODE_BLOCK / INODE_SIZE
-#define DISK_SIZE 8 * 1024 * 1024 // 8MB Byte
-#define TOTAL_BLOCK_NUM DISK_SIZE / FS_BLOCK_SIZE
+#define MAX_FILE_NUM (FS_BLOCK_SIZE * INODE_BLOCK / INODE_SIZE)
+#define DISK_SIZE (8 * 1024 * 1024) // 8MB Byte
+#define TOTAL_BLOCK_NUM (DISK_SIZE / FS_BLOCK_SIZE)
 
 // const int MAX_DATA_IN_BLOCK = 504; //size_t和long nNextBlock各占4byte
 #define MAX_DIR_IN_BLOCK 8
-#define MAX_DATA_IN_BLOCK FS_BLOCK_SIZE - 4
+#define MAX_DATA_IN_BLOCK (FS_BLOCK_SIZE - 4)
 #define FILE_SIZE 4096 // Byte
 
 // 定义文件名和扩展名
@@ -61,12 +61,12 @@ Github: https://github.com/Skeeser/GanshinFUSE
 #define MAX_PATH_LENGTH 255
 
 // 定义地址块
-#define FD_PER_BLK MAX_DATA_IN_BLOCK / sizeof(struct GFileDir)
-#define FD_ZEROTH_INDIR 4 * FD_PER_BLK
-#define FD_FIRST_INDIR 4 * FD_PER_BLK + FD_PER_BLK *FD_PER_BLK
-#define FD_SECOND_INDIR 4 * FD_PER_BLK + FD_PER_BLK *FD_PER_BLK + FD_PER_BLK *FD_PER_BLK *FD_PER_BLK
-#define MAX_HASH_SIZE 4 * FD_PER_BLK + FD_PER_BLK *FD_PER_BLK + \
-                          FD_PER_BLK *FD_PER_BLK *FD_PER_BLK + FD_PER_BLK *FD_PER_BLK *FD_PER_BLK *FD_PER_BLK
+#define FD_PER_BLK (MAX_DATA_IN_BLOCK / sizeof(struct GFileDir))
+#define FD_ZEROTH_INDIR (4 * FD_PER_BLK)
+#define FD_FIRST_INDIR (4 * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK)
+#define FD_SECOND_INDIR (4 * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK * FD_PER_BLK)
+#define MAX_HASH_SIZE (4 * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK + \
+                       FD_PER_BLK * FD_PER_BLK * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK * FD_PER_BLK * FD_PER_BLK)
 
 // 超级块结构体
 // 9 * 8 = 72 Byte
