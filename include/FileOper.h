@@ -48,6 +48,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 int getFileDirByPath(const char *path, struct GFileDir *attr);
 void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, struct GFileDir *p_fd);
 int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk);
+int initFileDir(struct GFileDir *file_dir);
 
 // File
 void getFileBlkNum(struct GInode *inode, int *blk_num);

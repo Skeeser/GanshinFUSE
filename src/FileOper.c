@@ -1296,6 +1296,19 @@ error:
 	return ret;
 }
 
+// 初始化file_dir
+int initFileDir(struct GFileDir *file_dir)
+{
+	int ret = 0;
+	memset(file_dir->fname, '\0', MAX_FILENAME + 1);
+	memset(file_dir->fext, '\0', MAX_EXTENSION + 1);
+	file_dir->flag = 0;
+	file_dir->fsize = 0;
+	file_dir->nInodeBlock = -1;
+	file_dir->nMenuInode = -1;
+	return ret;
+}
+
 // 根据路径新建文件
 int createFileByPath(const char *path, enum GTYPE file_type)
 {
@@ -1343,10 +1356,11 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 
 	// 不存在, 则创建新的
 	int hash_num = hash(fall_name);
+	//
 
 	// 赋值file_dir
-	memcpy(file_dir->fname, fname, strlen(fname) + 1);
-	memcpy(file_dir->fext, fext, strlen(fext) + 1);
+	strcpy(file_dir->fname, fname);
+	strcpy(file_dir->fext, fext);
 	// 文件大小初始化为0
 	file_dir->fsize = 0;
 	file_dir->nMenuInode = menu_inode_num;
