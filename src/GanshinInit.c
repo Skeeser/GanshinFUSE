@@ -98,7 +98,7 @@ static void initDataBitmap(FILE *const fp)
     if (int_block_num)
     {
         int a[int_block_num];
-        memset(a, 1, sizeof(a));
+        memset(a, 0xFFFFFFFF, sizeof(a));
         fwrite(a, sizeof(a), 1, fp);
     }
 

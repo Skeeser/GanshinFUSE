@@ -660,8 +660,6 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	getInodeByBlkId(cur_i, menu_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 
-	printf("fd_test: %ld %ld\n", FD_ZEROTH_INDIR, FD_PER_BLK);
-
 	if (0 <= hash_num && hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
