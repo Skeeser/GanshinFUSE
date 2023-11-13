@@ -268,7 +268,7 @@ int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int 
 	unsigned char temp_byte = 0x00;
 	fread(&temp_byte, sizeof(unsigned char), 1, fp);
 	// 返回之前的指针
-	fseek(fp, -1, SEEK_CUR);
+	fseek(fp, -1 * sizeof(temp_byte), SEEK_CUR);
 	// 处理开头的offset的bit情况
 	for (int i = 0; i < min(num, (8 - offset_temp_bit)); i++)
 	{
@@ -287,20 +287,24 @@ int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int 
 		fwrite(a, sizeof(a), 1, fp);
 	}
 
-	// 处理一整个Byte只有一部分在num区间内的情况
-	temp_byte = 0x00;
-	fread(&temp_byte, sizeof(unsigned char), 1, fp);
-	// 返回之前的指针
-	fseek(fp, -1, SEEK_CUR);
-	const int rest_used_bit = (num + offset_temp_bit) % 8;
-	// 利用循环置1
-	for (int i = 0; i < rest_used_bit; i++)
+	if ((num + offset_temp_bit) > 8)
 	{
-		unsigned char mask = 0x01;
-		mask <<= (7 - i);
-		temp_byte |= mask;
+		// 处理一整个Byte只有一部分在num区间内的情况
+		temp_byte = 0x00;
+		fread(&temp_byte, sizeof(unsigned char), 1, fp);
+		// 返回之前的指针
+		fseek(fp, -1, SEEK_CUR);
+		const int rest_used_bit = (num + offset_temp_bit) % 8;
+		// 利用循环置1
+		for (int i = 0; i < rest_used_bit; i++)
+		{
+			unsigned char mask = 0x01;
+			mask <<= (7 - i);
+			temp_byte |= mask;
+		}
+		fwrite(&temp_byte, sizeof(int), 1, fp);
 	}
-	fwrite(&temp_byte, sizeof(int), 1, fp);
+
 	printSuccess("setBitmapUsed: set free bit done!");
 
 error:
@@ -361,6 +365,7 @@ int getFreeDataBlk(const int need_num, short int *start_blk)
 		// 遍历块中的每一个Byte
 		for (iter_byte_num = 0; iter_byte_num < max_num_perblk; iter_byte_num++)
 		{
+			getDebugByteData(fp);
 			// 读出8个bit
 			fread(temp_unit, sizeof(unsigned char), 1, fp);
 			const unsigned char cur_byte = *temp_unit;

@@ -54,6 +54,7 @@ int getDebugByteData(FILE *fp)
     int ret = 0;
     unsigned char debug_data[1024];
     fread(debug_data, sizeof(unsigned char) * 1024, 1, fp);
+    fseek(fp, -1 * sizeof(debug_data), SEEK_CUR);
     return ret;
 }
 

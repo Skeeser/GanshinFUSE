@@ -65,7 +65,7 @@ static void initInodeBitmap(FILE *const fp)
     // 接着是剩余的部分置0,
     int rest_of_bitmap = (inode_bitmap_bit - 8) / 8;
     unsigned char rest_data[rest_of_bitmap];
-    memset(rest_data, 0, sizeof(rest_data));
+    memset(rest_data, 0x00, sizeof(rest_data));
     fwrite(rest_data, sizeof(rest_data), 1, fp);
 
     printSuccess("Initial InodeBitmap success!");
@@ -116,7 +116,7 @@ static void initDataBitmap(FILE *const fp)
     // 接着是剩余的部分置0,
     const int rest_of_bitmap = (data_bitmap_bit - byte_block_num * 8 - 8) / 8;
     unsigned char rest_data[rest_of_bitmap];
-    memset(rest_data, 0, sizeof(rest_data));
+    memset(rest_data, 0x00, sizeof(rest_data));
     fwrite(rest_data, sizeof(rest_data), 1, fp);
 
     printSuccess("Initial DataBitmap success!");
