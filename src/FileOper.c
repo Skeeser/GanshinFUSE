@@ -147,7 +147,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 	getInodeByBlkId(cur_i, temp_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 
-	if (0 <= hash_num < FD_ZEROTH_INDIR)
+	if (0 <= hash_num && hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
 		short int addr = temp_inode->addr[i];
@@ -660,7 +660,9 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 	getInodeByBlkId(cur_i, menu_inode);
 	struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
 
-	if (0 <= hash_num < FD_ZEROTH_INDIR)
+	printf("fd_test: %ld %ld\n", FD_ZEROTH_INDIR, FD_PER_BLK);
+
+	if (0 <= hash_num && hash_num < FD_ZEROTH_INDIR)
 	{
 		int i = hash_num / FD_PER_BLK;
 		short int *addr = &menu_inode->addr[i];
@@ -1356,15 +1358,14 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 
 	// 不存在, 则创建新的
 	int hash_num = hash(fall_name);
-	//
+	// 初始化file_dir
+	initFileDir(file_dir);
 
 	// 赋值file_dir
 	strcpy(file_dir->fname, fname);
 	strcpy(file_dir->fext, fext);
-	// 文件大小初始化为0
-	file_dir->fsize = 0;
+
 	file_dir->nMenuInode = menu_inode_num;
-	file_dir->nInodeBlock = -1;
 	file_dir->flag = file_type;
 
 	// 根据哈希值在目录创建filedir
