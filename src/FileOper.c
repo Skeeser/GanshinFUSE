@@ -69,11 +69,11 @@ int writeDataByBlkId(short int blk_id, const struct GDataBlock *data_blk)
 
 	if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) > 0)
 	{
-		printSuccess("writeDataByBlkId: Read data block success!");
+		printSuccess("writeDataByBlkId: write data block success!");
 	}
 	else
 	{
-		printError("writeDataByBlkId: Read data block failed!");
+		printError("writeDataByBlkId: write data block failed!");
 		fclose(fp);
 		return -1;
 	}
@@ -81,7 +81,7 @@ int writeDataByBlkId(short int blk_id, const struct GDataBlock *data_blk)
 	// 判断是否正确读取
 	if (ferror(fp))
 	{
-		printError("writeDataByBlkId: Read disk file failed!");
+		printError("writeDataByBlkId: write disk file failed!");
 		fclose(fp);
 		return -1;
 	}
@@ -365,7 +365,7 @@ int getFreeDataBlk(const int need_num, short int *start_blk)
 		// 遍历块中的每一个Byte
 		for (iter_byte_num = 0; iter_byte_num < max_num_perblk; iter_byte_num++)
 		{
-			getDebugByteData(fp);
+			// getDebugByteData(fp);
 			// 读出8个bit
 			fread(temp_unit, sizeof(unsigned char), 1, fp);
 			const unsigned char cur_byte = *temp_unit;
@@ -1182,10 +1182,10 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_n
 	tmp_path = strdup(path);
 	free_tmp_path = tmp_path;
 	// 清空字符串
-	memset(fname, '\0', strlen(fname));
-	memset(fext, '\0', strlen(fext));
-	memset(fall_name, '\0', strlen(fall_name));
-	memset(remain_path, '\0', strlen(remain_path));
+	memset(fname, '\0', sizeof(fname) + 1);
+	memset(fext, '\0', sizeof(fext) + 1);
+	memset(fall_name, '\0', sizeof(fall_name) + 1);
+	memset(remain_path, '\0', sizeof(remain_path) + 1);
 
 	// 检查路径
 	ret = checkFilePath(tmp_path);
@@ -1249,6 +1249,7 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_n
 			strncpy(fall_name, base_name, strlen(base_name));
 			// 取出剩余路径
 			strncpy(remain_path, path, base_name - free_tmp_path - 1);
+			remain_path[base_name - free_tmp_path - 1] = '\0';
 			// 如果剩余路径为空, 说明为根目录
 			if (strcmp(remain_path, "") == 0)
 			{
@@ -1262,7 +1263,8 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_n
 			{
 				if (checkFileFname(base_name) == 0)
 				{
-					memcpy(fname, base_name, length + 1);
+					strncpy(fname, base_name, length + 1);
+					strcpy(fext, "");
 				}
 				else
 				{
@@ -1279,8 +1281,8 @@ int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_n
 				char *tmp_ext = ++dot_ret;
 				if (checkFileFname(tmp_name) == 0 && checkFileFext(tmp_ext) == 0)
 				{
-					memcpy(fname, tmp_name, strlen(tmp_name) + 1);
-					memcpy(fext, tmp_ext, strlen(tmp_ext) + 1);
+					strcpy(fname, tmp_name);
+					strcpy(fext, tmp_ext);
 				}
 				else
 				{

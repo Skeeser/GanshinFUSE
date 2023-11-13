@@ -225,3 +225,7 @@ A: 注意len()要加一, 把'\0'也复制
 
 - [inode 详解](https://www.cnblogs.com/llife/p/11470668.html)
 - [fuse结合buildroot](https://cloud.tencent.com/developer/article/1006138?areaSource=106002.3)
+
+
+## 进度
+该addr的时候把目录的addr也给改了, 出问题
