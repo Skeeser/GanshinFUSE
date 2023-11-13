@@ -280,7 +280,7 @@ int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int 
 
 	// 处理一整个Byte都是num区间内的情况
 	const int set_byte_num = (num + offset_temp_bit) / 8 - 1;
-	if (set_byte_num)
+	if (set_byte_num > 0)
 	{
 		unsigned char a[set_byte_num];
 		memset(a, 0xFF, sizeof(a));
