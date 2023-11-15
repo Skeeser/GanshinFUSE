@@ -64,15 +64,15 @@ static void initInodeBitmap(FILE *const fp)
 
     /*
     需要把InodeBitmap的初始化的对应块
-    1. SuperBlock  1
-    2. InodeBitmap  1
-    3. DataBitmap  4
-    4. 根目录Inode 1
+    1. 根目录Inode 1
 
     需要把第一个Byte的第一个bit置1
+    Inode的bitmap的一个Byte对应一个块
+
     */
     const int inode_bitmap_bit = INODE_BITMAP * FS_BLOCK_SIZE * 8;
-    const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + 1;
+    // const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + 1;
+    const int used_block = 1;
 
     const int byte_block_num = used_block / 8;
     if (byte_block_num > 0)

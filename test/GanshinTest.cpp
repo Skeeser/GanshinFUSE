@@ -62,7 +62,7 @@ TEST(FILE, createFile)
 
 TEST(FILE, writeAndread)
 {
-    char *data = (char *)malloc(MAX_DIR_IN_BLOCK);
+    char *data = (char *)malloc(MAX_DATA_IN_BLOCK);
     initShortIntToData(data);
     short int read_int = retShortIntFromData(data, 5);
     ASSERT_EQ(read_int, -1);

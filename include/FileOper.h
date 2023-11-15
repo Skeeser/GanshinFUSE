@@ -27,8 +27,8 @@ void initShortIntToData(char *data);
 int writeShortIntToData(const short int addr, const int offset, char *data);
 
 // Inode
-int getInodeByBlkId(const short int blk_id, struct GInode *inode_blk);
-int writeInodeByBlkId(const short int blk_id, const struct GInode *inode_blk);
+int getInodeByInodeId(const short int inode_id, struct GInode *inode_blk);
+int writeInodeByInodeId(const short int inode_id, const struct GInode *inode_blk);
 int getInodeBlkByHash(const int hash_num, const int cur_i, int *target_i);
 int getInodeBlkByPath(const char *path, short int *file_inode);
 int getFreeInodeBlk(const int need_num, short int *start_blk);
