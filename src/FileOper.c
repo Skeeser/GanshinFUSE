@@ -184,7 +184,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		short int addr = temp_inode->addr[4];
 		if (addr < 0)
 			goto error;
-		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
+		int offset = (((hash_num - FD_ZEROTH_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		getDataByBlkId(addr, data_blk);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
@@ -198,11 +198,10 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		if (addr < 0)
 			goto error;
 		getDataByBlkId(addr, data_blk);
-		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (ADDR_PER_BLK * FD_PER_BLK);
+		int offset = (((hash_num - FD_FIRST_INDIR) / (ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
-
-		offset = offset * ADDR_PER_BLK;
+		offset = (((hash_num - FD_FIRST_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
@@ -216,16 +215,16 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		if (addr < 0)
 			goto error;
 		getDataByBlkId(addr, data_blk);
-		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK);
+		int offset = (((hash_num - FD_SECOND_INDIR) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
-		offset = offset * ADDR_PER_BLK;
+		offset = (((hash_num - FD_SECOND_INDIR) / (FD_PER_BLK * ADDR_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
 		// 断了?
-		offset = offset * ADDR_PER_BLK;
+		offset = (((hash_num - FD_SECOND_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
@@ -725,7 +724,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 
 		// 下面不能传入addr,要不然会把菜单的addr给改了
 		short int indir_addr = *addr;
-		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
+		int offset = (((hash_num - FD_ZEROTH_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
@@ -756,10 +755,10 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 
 		// 下面不能传入addr,要不然会把菜单的addr给改了
 		short int indir_addr = *addr;
-		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (ADDR_PER_BLK * FD_PER_BLK);
+		int offset = (((hash_num - FD_FIRST_INDIR) / (ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
-		offset = offset * ADDR_PER_BLK;
+		offset = (((hash_num - FD_FIRST_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
@@ -789,13 +788,13 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getAddrDataDirectIndex(addr, data_blk);
 
 		short int indir_addr = *addr;
-		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK);
+		int offset = (((hash_num - FD_SECOND_INDIR) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
-		offset = offset * ADDR_PER_BLK;
+		offset = (((hash_num - FD_SECOND_INDIR) / (FD_PER_BLK * ADDR_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
-		offset = offset * ADDR_PER_BLK;
+		offset = (((hash_num - FD_SECOND_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
