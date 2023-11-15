@@ -40,7 +40,7 @@ FileDir per Block  FD_PER_BLK = 508 / 40 = 12
 int hash(const char *in_str)
 {
     int hash = 0;
-    unsigned int seed = 31;
+    unsigned int seed = 131;
     for (int i = 0; in_str[i] != '\0'; i++)
     {
         hash = (hash * seed + in_str[i]) % MAX_HASH_SIZE;

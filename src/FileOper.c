@@ -198,11 +198,11 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		if (addr < 0)
 			goto error;
 		getDataByBlkId(addr, data_blk);
-		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);
+		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (ADDR_PER_BLK * FD_PER_BLK);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
-		offset = offset * FD_PER_BLK;
+		offset = offset * ADDR_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
@@ -216,16 +216,16 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		if (addr < 0)
 			goto error;
 		getDataByBlkId(addr, data_blk);
-		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);
+		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK);
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
-		offset = offset * FD_PER_BLK;
+		offset = offset * ADDR_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
-		// 断了
-		offset = offset * FD_PER_BLK;
+		// 断了?
+		offset = offset * ADDR_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
@@ -497,7 +497,7 @@ int getFreeInodeBlk(const int need_num, short int *start_blk)
 	// 检查结束标志
 	int done_flag = 0;
 
-	// 检查数据区bitmap, 不断循环直到找到符合条件的连续n块空闲块
+	// 检查Inode区bitmap, 不断循环直到找到符合条件的连续n块空闲块
 	while (cur_blk < max_inode_bitmap)
 	{
 		unsigned char cur_mask = 0x80;
@@ -557,7 +557,7 @@ int getFreeInodeBlk(const int need_num, short int *start_blk)
 	*start_blk = iter_blk_num * FS_BLOCK_SIZE * 8 + iter_byte_num * 8 + iter_bit_num - need_num + 1;
 
 	// 标记已经使用的块号
-	if ((ret = setBitmapUsed(start_inode_bitmap, need_num, *start_blk)) != 0)
+	if ((ret = setBitmapUsed(start_inode_bitmap, *start_blk, need_num)) != 0)
 	{
 
 		printError("getFreeInodeBlk: set bitmap failed!");
@@ -618,6 +618,8 @@ void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk)
 		data_blk->size = 0;
 		// 将data中的short int 置-1, 可能init到了存储file dir的块
 		initShortIntToData(data_blk->data);
+		// 将data_block写进文件
+		writeDataByBlkId(*addr, data_blk);
 	}
 	else // 地址已被创建
 	{
@@ -648,7 +650,8 @@ void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlo
 		data_blk->size = 0;
 		// 将data中的short int 置-1, 可能init到了存储file dir的块
 		initShortIntToData(data_blk->data);
-		// writeDataByBlkId(addr, data_blk);
+		// 将data_block写进文件
+		writeDataByBlkId(*addr, data_blk);
 	}
 	else // 地址已被创建
 	{
@@ -753,10 +756,10 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 
 		// 下面不能传入addr,要不然会把菜单的addr给改了
 		short int indir_addr = *addr;
-		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);
+		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (ADDR_PER_BLK * FD_PER_BLK);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
-		offset = offset * FD_PER_BLK;
+		offset = offset * ADDR_PER_BLK;
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
@@ -786,13 +789,13 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getAddrDataDirectIndex(addr, data_blk);
 
 		short int indir_addr = *addr;
-		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);
+		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
-		offset = offset * FD_PER_BLK;
+		offset = offset * ADDR_PER_BLK;
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
-		offset = offset * FD_PER_BLK;
+		offset = offset * ADDR_PER_BLK;
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);

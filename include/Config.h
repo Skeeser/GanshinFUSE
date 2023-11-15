@@ -62,11 +62,12 @@ Github: https://github.com/Skeeser/GanshinFUSE
 
 // 定义地址块
 #define FD_PER_BLK (MAX_DATA_IN_BLOCK / sizeof(struct GFileDir))
+#define ADDR_PER_BLK (MAX_DATA_IN_BLOCK / sizeof(short int))
 #define FD_ZEROTH_INDIR (4 * FD_PER_BLK)
-#define FD_FIRST_INDIR (4 * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK)
-#define FD_SECOND_INDIR (4 * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK * FD_PER_BLK)
-#define MAX_HASH_SIZE (4 * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK + \
-                       FD_PER_BLK * FD_PER_BLK * FD_PER_BLK + FD_PER_BLK * FD_PER_BLK * FD_PER_BLK * FD_PER_BLK)
+#define FD_FIRST_INDIR (4 * FD_PER_BLK + ADDR_PER_BLK * FD_PER_BLK)
+#define FD_SECOND_INDIR (4 * FD_PER_BLK + ADDR_PER_BLK * FD_PER_BLK + ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)
+#define MAX_HASH_SIZE (4 * FD_PER_BLK + ADDR_PER_BLK * FD_PER_BLK + \
+                       ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK + ADDR_PER_BLK * ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)
 
 // 超级块结构体
 // 9 * 8 = 72 Byte
@@ -110,7 +111,7 @@ struct GFileDir
     char fext[MAX_EXTENSION + 1]; // 扩展名
     size_t fsize;                 // 文件大小（file size）Byte
     long nMenuInode;              // 目录Inode块位置（where the first block is on disk）
-    long nInodeBlock;             // 该文件的inode块位置
+    long nInodeBlock;             // 该文件的inode块位置, 注意这两个都是inode的id不是块号
     int flag;                     // indicate type of file. 0:for unused; 1:for file; 2:for directory; -1:都有可能
 };
 

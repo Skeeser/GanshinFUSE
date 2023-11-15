@@ -26,7 +26,7 @@ int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 	int res = 0;
 	struct GInode *file_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	short int *inode_id;
-	*inode_id = 0;
+	*inode_id = -1;
 
 	// 根据路径获取对应文件的inode
 	if (getInodeBlkByPath(path, inode_id) != 0)
@@ -35,7 +35,7 @@ int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 		printError("GFS_getattr: error!");
 		return -1;
 	}
-	getInodeByBlkId(*inode_id, file_inode);
+	getInodeByInodeId(*inode_id, file_inode);
 	// 根据inode赋值给stbuf
 	fillStatByInode(file_inode, stbuf);
 

@@ -27,7 +27,8 @@ static void initSuperBlock(FILE *const fp)
     // 从0开始, 超级块数 + InodeBitMap块数 + DataBitMap块数 + Inode块数
     super_blk->first_blk = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + INODE_BLOCK;
     super_blk->datasize = DATA_BITMAP * FS_BLOCK_SIZE * 8;
-    super_blk->first_inode = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP;
+    // first_inode的定义为inode_id, 而不是原来的块号
+    super_blk->first_inode = 0; // SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP;
     super_blk->inode_area_size = INODE_BLOCK;
     super_blk->first_blk_of_inodebitmap = SUPER_BLOCK;
     super_blk->inodebitmap_size = INODE_BITMAP;
