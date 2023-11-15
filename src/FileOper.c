@@ -1146,8 +1146,8 @@ struct stat {
 */
 void fillStatByInode(struct GInode *inode, struct stat *st)
 {
-	int *st_blocks;
-	getFileBlkNum(inode, st_blocks);
+	// int *st_blocks;
+	// getFileBlkNum(inode, st_blocks);
 	// stbuf初始化为0
 	memset(st, 0, sizeof(struct stat));
 	st->st_mode = inode->st_mode;
@@ -1158,7 +1158,7 @@ void fillStatByInode(struct GInode *inode, struct stat *st)
 	st->st_size = inode->st_size;
 	st->st_atime = inode->st_atim;
 	st->st_blksize = FS_BLOCK_SIZE;
-	st->st_blocks = *st_blocks;
+	st->st_blocks = inode->st_size / FS_BLOCK_SIZE + 1;
 }
 
 // 检查文件名
