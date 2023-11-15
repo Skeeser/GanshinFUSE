@@ -986,7 +986,8 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 			// 如果没有 "."
 			if (ret == NULL)
 			{
-				if (strcmp(p_fd->fname, base_name) != 0 || p_fd->flag != 0)
+				// todo: 此处注意文件类型的判断,默认没有点为目录, 有点为文件
+				if (strcmp(p_fd->fname, base_name) != 0) // || p_fd->flag != GFileDir
 					goto error;
 				else
 					memcpy(attr, p_fd, sizeof(struct GFileDir));
@@ -997,7 +998,7 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 				*ret = '\0';
 				char *fname = base_name;
 				char *fext = ++ret;
-				if (strcmp(p_fd->fname, fname) != 0 || strcmp(p_fd->fext, fext) != 0 || p_fd->flag != 0)
+				if (strcmp(p_fd->fname, fname) != 0 || strcmp(p_fd->fext, fext) != 0) //  || p_fd->flag == 0
 				{
 				error:
 					free(p_fd);
