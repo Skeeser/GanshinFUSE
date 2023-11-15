@@ -1340,7 +1340,7 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 	char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
 	char *fall_name = (char *)malloc((MAX_EXTENSION + MAX_FILENAME) * sizeof(char));
 	char *remain_path = (char *)malloc(MAX_PATH_LENGTH * sizeof(char));
-	struct GInode *menu_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// struct GInode *menu_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 
@@ -1397,6 +1397,6 @@ error:
 	free(remain_path);
 	free(data_blk);
 	free(file_dir);
-	free(menu_inode);
+	// free(menu_inode);
 	return ret;
 }

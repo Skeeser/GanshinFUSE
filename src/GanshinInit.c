@@ -64,22 +64,37 @@ static void initInodeBitmap(FILE *const fp)
 
     /*
     需要把InodeBitmap的初始化的对应块
-    1. 根目录
+    1. SuperBlock  1
+    2. InodeBitmap  1
+    3. DataBitmap  4
+    4. 根目录Inode 1
 
     需要把第一个Byte的第一个bit置1
     */
     const int inode_bitmap_bit = INODE_BITMAP * FS_BLOCK_SIZE * 8;
+    const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + 1;
 
-    // 第一个Byte的第一个bit置1
+    const int byte_block_num = used_block / 8;
+    if (byte_block_num > 0)
+    {
+        unsigned char a[byte_block_num];
+        memset(a, 0xFF, sizeof(a));
+        fwrite(a, sizeof(a), 1, fp);
+    }
+
     unsigned char temp_data = 0x00;
-    unsigned char mask = 0x01;
-    mask <<= 7;
-    temp_data |= mask;
-
+    const int rest_used_block = used_block % 8;
+    // 利用循环置1
+    for (int i = 0; i < rest_used_block; i++)
+    {
+        unsigned char mask = 0x01;
+        mask <<= (7 - i);
+        temp_data |= mask;
+    }
     fwrite(&temp_data, sizeof(unsigned char), 1, fp);
 
     // 接着是剩余的部分置0,
-    int rest_of_bitmap = (inode_bitmap_bit - 8) / 8;
+    const int rest_of_bitmap = (inode_bitmap_bit - byte_block_num * 8 - 8) / 8;
     unsigned char rest_data[rest_of_bitmap];
     memset(rest_data, 0x00, sizeof(rest_data));
     fwrite(rest_data, sizeof(rest_data), 1, fp);
@@ -105,16 +120,16 @@ static void initDataBitmap(FILE *const fp)
     1. SuperBlock  1
     2. InodeBitmap  1
     3. DataBitmap  4
-    4. 根目录Inode 1
+    4. Inode 512
     */
     const int data_bitmap_bit = DATA_BITMAP * FS_BLOCK_SIZE * 8;
-    const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + 1;
+    const int used_block = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + INODE_BLOCK;
 
     const int byte_block_num = used_block / 8;
-    if (byte_block_num)
+    if (byte_block_num > 0)
     {
         unsigned char a[byte_block_num];
-        memset(a, 1, sizeof(a));
+        memset(a, 0xFF, sizeof(a));
         fwrite(a, sizeof(a), 1, fp);
     }
 
