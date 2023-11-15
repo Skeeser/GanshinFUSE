@@ -702,7 +702,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getAddrDataDirectIndex(addr, data_blk);
 
 		// 下面不能传入addr,要不然会把菜单的addr给改了
-		short int indir_addr = -1;
+		short int indir_addr = *addr;
 		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
@@ -733,7 +733,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getAddrDataDirectIndex(addr, data_blk);
 
 		// 下面不能传入addr,要不然会把菜单的addr给改了
-		short int indir_addr = -1;
+		short int indir_addr = *addr;
 		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
@@ -766,7 +766,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 获取地址和data blk
 		getAddrDataDirectIndex(addr, data_blk);
 
-		short int indir_addr = -1;
+		short int indir_addr = *addr;
 		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 

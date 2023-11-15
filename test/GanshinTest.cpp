@@ -50,7 +50,7 @@ TEST(FILE, divideFile)
 
 TEST(FILE, createFile)
 {
-    int ret = 0; // createFileByPath("/test.jpg", GFILE);
+    int ret = createFileByPath("/test.jpg", GFILE);
     ASSERT_EQ(ret, 0);
     struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
     ret = getFileDirByPath("/test.jpg", fd);

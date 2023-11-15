@@ -9,6 +9,8 @@ Github: https://github.com/Skeeser/GanshinFUSE
 // 将文件系统的相关信息写入超级块
 static void initSuperBlock(FILE *const fp)
 {
+    struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
+    data_blk->size += sizeof(struct GSuperBlock);
     // 动态内存分配，申请super_blk
     struct GSuperBlock *const super_blk = malloc(sizeof(struct GSuperBlock));
     super_blk->fs_size = TOTAL_BLOCK_NUM;
@@ -21,7 +23,10 @@ static void initSuperBlock(FILE *const fp)
     super_blk->inodebitmap_size = INODE_BITMAP;
     super_blk->first_blk_of_databitmap = SUPER_BLOCK + INODE_BITMAP;
     super_blk->databitmap_size = DATA_BITMAP;
-    if (fwrite(super_blk, sizeof(struct GSuperBlock), 1, fp) == 0)
+
+    memcpy(data_blk->data, super_blk, sizeof(struct GSuperBlock));
+
+    if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) == 0)
     {
         printSuccess("Init super block success!");
     }
@@ -30,6 +35,7 @@ static void initSuperBlock(FILE *const fp)
         printError("Init super block failed!");
     }
     free(super_blk);
+    free(data_blk);
 }
 
 // Bitmap 总大小 (INODE_BITMAP + DATA_BITMAP) * FS_BLOCK_SIZE * 8  bit
