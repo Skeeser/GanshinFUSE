@@ -107,12 +107,20 @@ int getInodeByBlkId(const short int blk_id, struct GInode *inode_blk)
 	return 0;
 }
 
-// 根据块号, 写入Inode, 一个块一个inode
+// 根据块号, 写入Inode, 一个块多个inode
 int writeInodeByBlkId(const short int blk_id, const struct GInode *inode_blk)
 {
 	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
-	gblk->size += sizeof(struct GInode);
+	// 读入原来的数据
+	getDataByBlkId(blk_id, gblk);
+	if (gblk->size < 0)
+		gblk->size = 0;
+
+	// todo:先暂时一块一个inode
+	// memcpy(gblk->data + gblk->size, inode_blk, sizeof(struct GInode));
 	memcpy(gblk->data, inode_blk, sizeof(struct GInode));
+
+	gblk->size += sizeof(struct GInode);
 	int ret = writeDataByBlkId(blk_id, gblk);
 
 	if (ret != 0)
@@ -207,6 +215,7 @@ int getFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_fil
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
 
+		// 断了
 		offset = offset * FD_PER_BLK;
 		addr = retShortIntFromData(data_blk->data, offset);
 		getDataByBlkId(addr, data_blk);
@@ -1341,7 +1350,7 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 	char *fall_name = (char *)malloc((MAX_EXTENSION + MAX_FILENAME) * sizeof(char));
 	char *remain_path = (char *)malloc(MAX_PATH_LENGTH * sizeof(char));
 	// struct GInode *menu_inode = (struct GInode *)malloc(sizeof(struct GInode));
-	struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
+	// struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 
 	// 获取文件名, 扩展名, 全名, 剩余路径
@@ -1395,7 +1404,7 @@ error:
 	free(fname);
 	free(fext);
 	free(remain_path);
-	free(data_blk);
+	// free(data_blk);
 	free(file_dir);
 	// free(menu_inode);
 	return ret;
