@@ -9,6 +9,16 @@ Github: https://github.com/Skeeser/GanshinFUSE
 // 将文件系统的相关信息写入超级块
 static void initSuperBlock(FILE *const fp)
 {
+    // 移动指针到文件的InodeBitmap块
+    if (fseek(fp, FS_BLOCK_SIZE * 0, SEEK_SET) == 0)
+    {
+        printSuccess("InitSuperBlock fseek success!");
+    }
+    else
+    {
+        printError("InitSuperBlock fseek failed!");
+    }
+
     struct GDataBlock *data_blk = malloc(sizeof(struct GDataBlock));
     data_blk->size += sizeof(struct GSuperBlock);
     // 动态内存分配，申请super_blk
@@ -26,7 +36,7 @@ static void initSuperBlock(FILE *const fp)
 
     memcpy(data_blk->data, super_blk, sizeof(struct GSuperBlock));
 
-    if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) == 0)
+    if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) != 0)
     {
         printSuccess("Init super block success!");
     }
@@ -193,6 +203,9 @@ int main(int argc, char *argv[])
         return 0;
     }
     printSuccess("Open disk file success!");
+
+    // 初始化SuperBlock
+    initSuperBlock(fp);
 
     // 初始化InodeBitmap
     initInodeBitmap(fp);

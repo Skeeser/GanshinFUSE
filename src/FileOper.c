@@ -20,6 +20,7 @@ int getDataByBlkId(const short int blk_id, struct GDataBlock *data_blk)
 		return -1;
 	}
 	// printSuccess("Open disk file success!");
+	// getDebugByteData(fp);
 
 	// 文件打开后，就用blk_id * FS_BLOCK_SIZE作为偏移量
 	fseek(fp, blk_id * FS_BLOCK_SIZE, SEEK_SET);
@@ -850,6 +851,7 @@ int checkFilePath(const char *path)
 // 读超级块
 int getSuperBlock(struct GSuperBlock *sp_blk)
 {
+
 	struct GDataBlock *data_blk;
 	data_blk = malloc(sizeof(struct GDataBlock));
 
@@ -862,7 +864,7 @@ int getSuperBlock(struct GSuperBlock *sp_blk)
 	}
 	else
 		printSuccess("readSuperBlock: read super block success!");
-	memcpy(sp_blk, data_blk, sizeof(struct GSuperBlock));
+	memcpy(sp_blk, data_blk->data, sizeof(struct GSuperBlock));
 
 	free(data_blk);
 	return 0;
