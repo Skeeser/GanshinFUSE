@@ -1421,3 +1421,10 @@ error:
 	// free(menu_inode);
 	return ret;
 }
+
+int removeFileByPath(const char *path, enum GTYPE file_type)
+{
+	int ret = 0;
+error:
+	return ret;
+}

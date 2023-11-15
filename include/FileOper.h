@@ -53,6 +53,7 @@ int initFileDir(struct GFileDir *file_dir);
 // File
 void getFileBlkNum(struct GInode *inode, int *blk_num);
 int createFileByPath(const char *path, enum GTYPE file_type);
+int removeFileByPath(const char *path, enum GTYPE file_type);
 int checkFileFname(const char *fname);
 int checkFileFext(const char *fext);
 int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_name, char *remain_path, enum GTYPE file_type);

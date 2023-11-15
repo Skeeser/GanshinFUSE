@@ -48,5 +48,11 @@ int GFS_mknod(const char *path, mode_t mode, dev_t dev)
 {
 	mode = (mode_t)0;
 	dev = (dev_t)0;
-	createFileByPath(path, GFILE);
+	return createFileByPath(path, GFILE);
+}
+
+// 此函数用来删除文件
+int GFS_unlink(const char * path)
+{
+	return removeFileByPath(path, GFILE);
 }
