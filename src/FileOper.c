@@ -701,9 +701,10 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 获取地址和data blk
 		getAddrDataDirectIndex(addr, data_blk);
 
-		// 更新addr
+		// 下面不能传入addr,要不然会把菜单的addr给改了
+		short int indir_addr = -1;
 		int offset = (hash_num - FD_ZEROTH_INDIR) * sizeof(short int) / FD_PER_BLK;
-		getAddrDataIndirectIndex(addr, offset, data_blk);
+		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 更新menu inode
@@ -722,7 +723,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 将file dir写入到data blk中
 		writeFileDirToDataBlk(p_filedir, offset, data_blk);
 		// 将data blk写入到文件
-		writeDataByBlkId(*addr, data_blk);
+		writeDataByBlkId(indir_addr, data_blk);
 	}
 	else if (hash_num < FD_SECOND_INDIR)
 	{
@@ -731,11 +732,13 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 获取地址和data blk
 		getAddrDataDirectIndex(addr, data_blk);
 
+		// 下面不能传入addr,要不然会把菜单的addr给改了
+		short int indir_addr = -1;
 		int offset = (hash_num - FD_FIRST_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK);
-		getAddrDataIndirectIndex(addr, offset, data_blk);
+		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = offset * FD_PER_BLK;
-		getAddrDataIndirectIndex(addr, offset, data_blk);
+		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 更新menu inode
@@ -754,7 +757,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 将file dir写入到data blk中
 		writeFileDirToDataBlk(p_filedir, offset, data_blk);
 		// 将data blk写入到文件
-		writeDataByBlkId(*addr, data_blk);
+		writeDataByBlkId(indir_addr, data_blk);
 	}
 	else if (hash_num < MAX_HASH_SIZE)
 	{
@@ -763,14 +766,15 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 获取地址和data blk
 		getAddrDataDirectIndex(addr, data_blk);
 
+		short int indir_addr = -1;
 		int offset = (hash_num - FD_SECOND_INDIR) * sizeof(short int) / (FD_PER_BLK * FD_PER_BLK * FD_PER_BLK);
-		getAddrDataIndirectIndex(addr, offset, data_blk);
+		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = offset * FD_PER_BLK;
-		getAddrDataIndirectIndex(addr, offset, data_blk);
+		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = offset * FD_PER_BLK;
-		getAddrDataIndirectIndex(addr, offset, data_blk);
+		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 更新menu inode
@@ -789,7 +793,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 将file dir写入到data blk中
 		writeFileDirToDataBlk(p_filedir, offset, data_blk);
 		// 将data blk写入到文件
-		writeDataByBlkId(*addr, data_blk);
+		writeDataByBlkId(indir_addr, data_blk);
 	}
 	else
 	{
