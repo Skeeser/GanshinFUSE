@@ -1424,7 +1424,75 @@ error:
 
 int removeFileByPath(const char *path, enum GTYPE file_type)
 {
+	int res, par_size;
+	// 建立文件的目录的inode块
+	long *par_menu_blk;
+
 	int ret = 0;
+	short int menu_inode_num = 0;
+	// 文件名和扩展名
+	char *fname = (char *)malloc(MAX_FILENAME * sizeof(char));
+	char *fext = (char *)malloc(MAX_EXTENSION * sizeof(char));
+	char *fall_name = (char *)malloc((MAX_EXTENSION + MAX_FILENAME) * sizeof(char));
+	char *remain_path = (char *)malloc(MAX_PATH_LENGTH * sizeof(char));
+	// struct GInode *menu_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
+	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+
+	// 获取文件名, 扩展名, 全名, 剩余路径
+	if ((ret = divideFileNameByPath(path, fname, fext, fall_name, remain_path, file_type)) != 0)
+	{
+		printError("removeFileByPath: divide file name failed!");
+		goto error;
+	}
+
+	// 获取parent menu的inode
+	if ((ret = getInodeBlkByPath(remain_path, &menu_inode_num)) != 0)
+	{
+		printError("removeFileByPath: get Menu Inode Blk failed!");
+		goto error;
+	}
+
+	// 检查该文件或目录是否已经存在
+	if (getFileDirByPath(path, file_dir) != 0)
+	{
+		ret = -1;
+		printError("removeFileByPath: the file not exit.");
+		goto error;
+	}
+
+	// 文件存在, 要进行删除
+	// 计算哈希
+	int hash_num = hash(fall_name);
+
+	// 根据哈希进行删除
+	if ((ret = removeFileByHash(hash_num, menu_inode_num)) != 0)
+	{
+		printError("removeFileByPath: remove file failed!");
+		goto error;
+	}
+
+	printSuccess("removeFileByPath: success!");
 error:
+	free(fname);
+	free(fext);
+	free(remain_path);
+	// free(data_blk);
+	free(file_dir);
+	// free(menu_inode);
+	return ret;
+}
+
+// 根据哈希值, 删除文件
+/*
+要删除的东西:
+1. 对应文件的inode_bitmap的bit置0
+2. 对应文件的inode所有的addr用的data块对应的data_bitmap的bit置0
+3. 在目录的对应的file_dir位置中写个空的file_dir进去
+*/
+int removeFileByHash(const int hash_num, const int menu_cur_i)
+{
+	int ret = 0;
+
 	return ret;
 }

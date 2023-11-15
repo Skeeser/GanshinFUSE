@@ -57,5 +57,6 @@ int removeFileByPath(const char *path, enum GTYPE file_type);
 int checkFileFname(const char *fname);
 int checkFileFext(const char *fext);
 int divideFileNameByPath(const char *path, char *fname, char *fext, char *fall_name, char *remain_path, enum GTYPE file_type);
+int removeFileByHash(const int hash_num, const int menu_cur_i);
 
 #endif
