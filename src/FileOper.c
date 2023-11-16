@@ -730,7 +730,7 @@ void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk)
 	}
 }
 
-// 根据传入的addr, 修改addr并且获取data blk, 适用于0层以上索引, 即addr不是从inode中得到
+// 根据传入的"上次的"addr, 修改addr并且获取data blk, 适用于0层以上索引, 即addr不是从inode中得到
 void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlock *data_blk)
 {
 	const short int old_addr = *addr;
@@ -1954,8 +1954,9 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 {
 	int ret = 0;
 	// char *cur_buf_pointer = buf;
-	long already_read_size = 0;
+	long already_write_size = 0;
 	const int start_data_bitmap = SUPER_BLOCK + INODE_BITMAP;
+	const int max_data_perblk = MAX_DATA_IN_BLOCK;
 	const long blk_offset = offset / MAX_DATA_IN_BLOCK;
 	long data_offset = offset % MAX_DATA_IN_BLOCK;
 
@@ -1972,16 +1973,17 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		goto error;
 	}
 
-	// 将原有占了bitmap的块置0
-	// 默认文件是顺序存储, 遍历
 	// const int blk_num = temp_inode->st_size / MAX_DATA_IN_BLOCK;
+
 	// 检查要偏移量是否越界
-	if (offset > temp_inode->st_size)
+	if (offset > temp_inode->st_size || (offset + size) > MAX_FILE_SIZE)
 	{
 		ret = -EFBIG;
-		printError("writeFileDataByInodeId: offset over fsize!");
+		printError("writeFileDataByInodeId: offset over fsize OR file too big!");
 		goto error;
 	}
+	// 增加inode的文件大小
+	temp_inode->st_size += size;
 
 	int cur_num = 0;
 
@@ -1989,25 +1991,30 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 	for (int i = 0; i < 4; i++)
 	{
 		// menu的地址
-		const short int addr = temp_inode->addr[i];
+		short int *addr = &temp_inode->addr[i];
 		// 获取地址和data blk
 		getAddrDataDirectIndex(addr, temp_data_blk);
-		if (addr >= 0)
+		if (*addr >= 0)
 		{
 			if (cur_num >= blk_offset)
 			{
-				// 拿到menu地址指向的数据块
-				getDataByBlkId(addr, temp_data_blk);
-				long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
-				if (read_size <= 0)
-					read_size = 0;
-				memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+				long write_size = min(max_data_perblk - data_offset, (size - already_write_size));
+
+				if (write_size <= 0)
+					write_size = 0;
+
+				memcpy(temp_data_blk->data, buf, write_size);
+
 				data_offset = 0;
-				// 更新已经读过的字节数
-				already_read_size += read_size;
-				// 更新buf指针
-				cur_buf_pointer += read_size;
-				if (already_read_size >= size)
+				// 更新已经写过的字节数
+				already_write_size += write_size;
+				// 更新data blk的大小
+				temp_data_blk->size += write_size;
+				//  将data_blk写进文件
+				writeDataByBlkId(*addr, temp_data_blk);
+
+				// 到达要写的size, 终止写入
+				if (already_write_size >= size)
 				{
 					goto error;
 				}
@@ -2016,39 +2023,41 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		else
 			goto error;
 
-		// if (cur_num == blk_num)
-		// 	goto error;
-		// else
 		cur_num++;
 	}
 
 	// 一次间接
 	// menu的地址
-	const short int first_Indir = temp_inode->addr[4];
-	if (first_Indir >= 0)
+	short int *second_addr = &temp_inode->addr[4];
+	if (*second_addr >= 0)
 	{
 		// 获取menu地址指向的一次间接块
-		getDataByBlkId(first_Indir, first_data_blk);
-		for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+		getAddrDataDirectIndex(second_addr, second_data_blk);
+		for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
 		{
-			const short int addr = retShortIntFromData(first_data_blk->data, i);
-
-			if (addr >= 0)
+			short int first_addr = *second_addr;
+			getAddrDataIndirectIndex(&first_addr, i, first_data_blk);
+			if (first_addr >= 0)
 			{
 				if (cur_num >= blk_offset)
 				{
-					// 拿到menu地址指向的数据块
-					getDataByBlkId(addr, temp_data_blk);
-					long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
-					if (read_size <= 0)
-						read_size = 0;
-					memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+					long write_size = min(max_data_perblk - data_offset, (size - already_write_size));
+
+					if (write_size <= 0)
+						write_size = 0;
+
+					memcpy(first_data_blk->data, buf, write_size);
+
 					data_offset = 0;
-					// 更新已经读过的字节数
-					already_read_size += read_size;
-					// 更新buf指针
-					cur_buf_pointer += read_size;
-					if (already_read_size >= size)
+					// 更新已经写过的字节数
+					already_write_size += write_size;
+					// 更新data blk的大小
+					first_data_blk->size += write_size;
+					//  将data_blk写进文件
+					writeDataByBlkId(first_addr, first_data_blk);
+
+					// 到达要写的size, 终止写入
+					if (already_write_size >= size)
 					{
 						goto error;
 					}
@@ -2057,43 +2066,47 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 			else
 				goto error;
 
-			if (cur_num == blk_num)
-				goto error;
-			else
-				cur_num++;
+			cur_num++;
 		}
 	}
 	else
 		goto error;
 
 	// 二次间接
-	const short int second_Indir = temp_inode->addr[5];
-	if (second_Indir >= 0)
+	short int *third_addr = &temp_inode->addr[5];
+	if (*third_addr >= 0)
 	{
-		getDataByBlkId(second_Indir, second_data_blk);
-		for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
+		// 获取menu地址指向的一次间接块
+		getAddrDataDirectIndex(third_addr, third_data_blk);
+		for (int i = 0; i < third_data_blk->size; i += sizeof(short int))
 		{
-			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
-			getDataByBlkId(first_Indir, first_data_blk);
-			for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+			short int second_addr = *third_addr;
+			getAddrDataIndirectIndex(&second_addr, i, second_data_blk);
+			for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
 			{
-				const short int addr = retShortIntFromData(first_data_blk->data, i);
-				if (addr >= 0)
+				short int first_addr = second_addr;
+				getAddrDataIndirectIndex(&first_addr, i, first_data_blk);
+				if (first_addr >= 0)
 				{
 					if (cur_num >= blk_offset)
 					{
-						// 拿到menu地址指向的数据块
-						getDataByBlkId(addr, temp_data_blk);
-						long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
-						if (read_size <= 0)
-							read_size = 0;
-						memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+						long write_size = min(max_data_perblk - data_offset, (size - already_write_size));
+
+						if (write_size <= 0)
+							write_size = 0;
+
+						memcpy(first_data_blk->data, buf, write_size);
+
 						data_offset = 0;
-						// 更新已经读过的字节数
-						already_read_size += read_size;
-						// 更新buf指针
-						cur_buf_pointer += read_size;
-						if (already_read_size >= size)
+						// 更新已经写过的字节数
+						already_write_size += write_size;
+						// 更新data blk的大小
+						first_data_blk->size += write_size;
+						//  将data_blk写进文件
+						writeDataByBlkId(first_addr, first_data_blk);
+
+						// 到达要写的size, 终止写入
+						if (already_write_size >= size)
 						{
 							goto error;
 						}
@@ -2102,10 +2115,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 				else
 					goto error;
 
-				if (cur_num == blk_num)
-					goto error;
-				else
-					cur_num++;
+				cur_num++;
 			}
 		}
 	}
@@ -2113,37 +2123,45 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		goto error;
 
 	// 三次间接
-	short int third_Indir = temp_inode->addr[6];
-	if (third_Indir >= 0)
+	short int *addr = &temp_inode->addr[6];
+	if (*addr >= 0)
 	{
-		getDataByBlkId(third_Indir, third_data_blk);
-		for (int i = 0; i < third_data_blk->size; i += sizeof(short int))
+		// 获取menu地址指向的一次间接块
+		getAddrDataDirectIndex(addr, temp_data_blk);
+		for (int i = 0; i < temp_data_blk->size; i += sizeof(short int))
 		{
-			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
-			getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
-			for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
+			short int third_addr = *addr;
+			// 获取menu地址指向的一次间接块
+			getAddrDataDirectIndex(third_addr, third_data_blk);
+			for (int i = 0; i < third_data_blk->size; i += sizeof(short int))
 			{
-				const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
-				getDataByBlkId(first_Indir, first_data_blk);
-				for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+				short int second_addr = third_addr;
+				getAddrDataIndirectIndex(&second_addr, i, second_data_blk);
+				for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
 				{
-					const short int addr = retShortIntFromData(first_data_blk->data, i);
-					if (addr >= 0)
+					short int first_addr = second_addr;
+					getAddrDataIndirectIndex(&first_addr, i, first_data_blk);
+					if (first_addr >= 0)
 					{
 						if (cur_num >= blk_offset)
 						{
-							// 拿到menu地址指向的数据块
-							getDataByBlkId(addr, temp_data_blk);
-							long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
-							if (read_size <= 0)
-								read_size = 0;
-							memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+							long write_size = min(max_data_perblk - data_offset, (size - already_write_size));
+
+							if (write_size <= 0)
+								write_size = 0;
+
+							memcpy(first_data_blk->data, buf, write_size);
+
 							data_offset = 0;
-							// 更新已经读过的字节数
-							already_read_size += read_size;
-							// 更新buf指针
-							cur_buf_pointer += read_size;
-							if (already_read_size >= size)
+							// 更新已经写过的字节数
+							already_write_size += write_size;
+							// 更新data blk的大小
+							first_data_blk->size += write_size;
+							//  将data_blk写进文件
+							writeDataByBlkId(first_addr, first_data_blk);
+
+							// 到达要写的size, 终止写入
+							if (already_write_size >= size)
 							{
 								goto error;
 							}
@@ -2152,10 +2170,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 					else
 						goto error;
 
-					if (cur_num == blk_num)
-						goto error;
-					else
-						cur_num++;
+					cur_num++;
 				}
 			}
 		}
@@ -2165,6 +2180,9 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 
 	printSuccess("writeFileDataByInodeId: success");
 error:
+	// 更新inode
+	writeInodeByInodeId(temp_inode, inode_id);
+
 	free(first_data_blk);
 	free(second_data_blk);
 	free(third_data_blk);

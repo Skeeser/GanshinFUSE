@@ -100,6 +100,8 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 ```
   
+<br>
+
 ### 设置disk地址
 需要修改`~/GanshinFUSE/include/config.h` 中的  
 ```c
@@ -136,6 +138,7 @@ make
 ```shell
 cd build/
 ```
+<br>
 
 ### 初始化
 
@@ -156,10 +159,14 @@ cd build/
 ./GanshinFS
 ```
 
+<br>
+
 ### 运行测试
 ```shell
 ./GanhsinTest
 ```
+
+<br>
 
 ## 调试工具
 LLDB
