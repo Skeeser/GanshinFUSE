@@ -72,6 +72,16 @@ TEST(FILE, writeAndread)
     ASSERT_EQ(read_int, 98);
 }
 
+TEST(FILE, removeFile)
+{
+    int ret = removeFileByPath("/test.jpg", GFILE);
+    ASSERT_EQ(ret, 0);
+    struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+    ret = getFileDirByPath("/test.jpg", fd);
+    ASSERT_EQ(ret, -1);
+    free(fd);
+}
+
 int main(int argc, char *argv[])
 {
     testing::InitGoogleTest(&argc, argv);

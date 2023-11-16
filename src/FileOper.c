@@ -1953,7 +1953,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 
 		offset = (((hash_num - FD_SECOND_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int fourth_addr = retShortIntFromData(second_data_blk->data, offset);
+		const short int fourth_addr = retShortIntFromData(third_data_blk->data, offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(fourth_addr, fourth_data_blk);
 
