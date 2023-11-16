@@ -1864,6 +1864,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
+			writeDataByBlkId(first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
 
@@ -1913,12 +1914,14 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (third_data_blk->size <= 0)
 		{
 			second_data_blk->size -= sizeof(short int);
+			writeDataByBlkId(second_addr, second_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, third_addr, 1);
 		}
 
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
+			writeDataByBlkId(first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
 
@@ -1975,18 +1978,21 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (fourth_data_blk->size <= 0)
 		{
 			third_data_blk->size -= sizeof(short int);
+			writeDataByBlkId(third_addr, third_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, fourth_addr, 1);
 		}
 
 		if (third_data_blk->size <= 0)
 		{
 			second_data_blk->size -= sizeof(short int);
+			writeDataByBlkId(second_addr, second_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, third_addr, 1);
 		}
 
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
+			writeDataByBlkId(first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
 
