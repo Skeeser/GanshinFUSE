@@ -18,5 +18,5 @@ int GFS_unlink(const char *path);
 int GFS_open(const char *path, struct fuse_file_info *fi);
 int GFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 int GFS_release(const char *path, struct fuse_file_info *fi);
-
+int GFS_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 #endif
