@@ -109,7 +109,7 @@ int getInodeByInodeId(const short int inode_id, struct GInode *inode_blk)
 	const int blk_offset = inode_start + inode_id / MAX_INODE_IN_BLOCK;
 	const int inode_offset = inode_id % MAX_INODE_IN_BLOCK;
 
-	int ret = getDataByBlkId(blk_offset, gblk);
+	ret = getDataByBlkId(blk_offset, gblk);
 	if (ret != 0)
 	{
 		free(gblk);
@@ -1016,21 +1016,12 @@ int getSuperBlock(struct GSuperBlock *sp_blk)
 // 根据路径，到相应的目录寻找文件的GFileDir，并赋值给attr
 int getFileDirByPath(const char *path, struct GFileDir *attr)
 {
-	// 获取磁盘根目录块的位置
-	// printSuccess("Get File Dir To Attr Start!");
-	printf("getFileDirToAttr: get file dir by: %s\n", path);
-
 	struct GSuperBlock *sp_blk;
 	// 将原本GDataBlock的数据转换成GSuperBlock
 	sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
 	getSuperBlock(sp_blk);
 	long start_inode = -1;
 	start_inode = sp_blk->first_inode;
-	printf("Super Block:\nfs_size=%ld, first_blk=%ld, datasize=%ld, first_inode=%ld, inode_area_size=%ld, first_blk_of_inodebitmap=%ld, inodebitmap_size=%ld, first_blk_of_databitmap=%ld, databitmap_size=%ld\n",
-		   sp_blk->fs_size, sp_blk->first_blk, sp_blk->datasize, sp_blk->first_inode, sp_blk->inode_area_size, sp_blk->first_blk_of_inodebitmap,
-		   sp_blk->inodebitmap_size, sp_blk->first_blk_of_databitmap, sp_blk->databitmap_size);
-
-	printf("start_inode:%ld\n", start_inode);
 
 	int ret = 0;
 	// 解析path
@@ -1463,7 +1454,7 @@ int initFileDir(struct GFileDir *file_dir)
 	memset(file_dir->fname, '\0', MAX_FILENAME + 1);
 	memset(file_dir->fext, '\0', MAX_EXTENSION + 1);
 	file_dir->flag = 0;
-	file_dir->fsize = 0;
+	// file_dir->fsize = 0;
 	file_dir->nInodeBlock = -1;
 	file_dir->nMenuInode = -1;
 	return ret;
@@ -1962,7 +1953,7 @@ error:
 int writeFileDataByInodeId(const short int inode_id, const unsigned long size, const long offset, const char *buf)
 {
 	int ret = 0;
-	char *cur_buf_pointer = buf;
+	// char *cur_buf_pointer = buf;
 	long already_read_size = 0;
 	const int start_data_bitmap = SUPER_BLOCK + INODE_BITMAP;
 	const long blk_offset = offset / MAX_DATA_IN_BLOCK;
@@ -1983,7 +1974,15 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 
 	// 将原有占了bitmap的块置0
 	// 默认文件是顺序存储, 遍历
-	const int blk_num = temp_inode->st_size / MAX_DATA_IN_BLOCK;
+	// const int blk_num = temp_inode->st_size / MAX_DATA_IN_BLOCK;
+	// 检查要偏移量是否越界
+	if (offset > temp_inode->st_size)
+	{
+		ret = -EFBIG;
+		printError("writeFileDataByInodeId: offset over fsize!");
+		goto error;
+	}
+
 	int cur_num = 0;
 
 	// 直接地址
@@ -1991,6 +1990,8 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 	{
 		// menu的地址
 		const short int addr = temp_inode->addr[i];
+		// 获取地址和data blk
+		getAddrDataDirectIndex(addr, temp_data_blk);
 		if (addr >= 0)
 		{
 			if (cur_num >= blk_offset)
@@ -2015,10 +2016,10 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		else
 			goto error;
 
-		if (cur_num == blk_num)
-			goto error;
-		else
-			cur_num++;
+		// if (cur_num == blk_num)
+		// 	goto error;
+		// else
+		cur_num++;
 	}
 
 	// 一次间接

@@ -138,21 +138,12 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 		goto error;
 	}
 
-	// 检查要偏移量是否越界
-	if (offset > file_dir->fsize)
-	{
-		printError("GFS_write: offset over fsize!");
-		ret = -EFBIG;
-		goto error;
-	}
-
 	const long file_inode_id = file_dir->nInodeBlock;
 
 	// 根据inode_id来写入文件
 	// 根据文件信息读取文件内容
-	if (writeFileDataByInodeId(file_inode_id, size, offset, buf) == -1)
+	if ((ret = writeFileDataByInodeId(file_inode_id, size, offset, buf)) != 0)
 	{
-		ret = -1;
 		printf("GFS_write: write file failed!");
 		goto error;
 	}
