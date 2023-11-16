@@ -87,13 +87,14 @@ int GFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse
 		goto error;
 	}
 
+	const long inode_id = file_dir->nInodeBlock;
 	// 根据文件信息读取文件内容
-	// if (getDataByBlkId(file_dir->nInodeBlock, data_blk) == -1)
-	// {
-	// 	ret = -1;
-	// 	printf("GFS_read: read file failed!");
-	// 	goto error;
-	// }
+	if (getFileDataByInodeId(inode_id, size, offset, buf) == -1)
+	{
+		ret = -1;
+		printf("GFS_read: read file failed!");
+		goto error;
+	}
 
 	printSuccess("GFS_read: file read success!");
 
