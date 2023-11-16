@@ -1948,7 +1948,7 @@ int getFileDataByInodeId(const short int inode_id, const unsigned long size, con
 	else
 		goto error;
 
-	printSuccess("removeFileDataByInodeId: success");
+	printSuccess("getFileDataByInodeId: success");
 error:
 	free(first_data_blk);
 	free(second_data_blk);
@@ -1961,7 +1961,215 @@ error:
 // 根据inode id写入文件数据
 int writeFileDataByInodeId(const short int inode_id, const unsigned long size, const long offset, const char *buf)
 {
-	;
+	int ret = 0;
+	char *cur_buf_pointer = buf;
+	long already_read_size = 0;
+	const int start_data_bitmap = SUPER_BLOCK + INODE_BITMAP;
+	const long blk_offset = offset / MAX_DATA_IN_BLOCK;
+	long data_offset = offset % MAX_DATA_IN_BLOCK;
+
+	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// int ADDR_PER_BLK = MAX_DATA_IN_BLOCK / sizeof(short int);
+	struct GDataBlock *temp_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *first_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *second_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *third_data_blk = malloc(sizeof(struct GDataBlock));
+
+	if (getInodeByInodeId(inode_id, temp_inode) != 0)
+	{
+		ret = -1;
+		goto error;
+	}
+
+	// 将原有占了bitmap的块置0
+	// 默认文件是顺序存储, 遍历
+	const int blk_num = temp_inode->st_size / MAX_DATA_IN_BLOCK;
+	int cur_num = 0;
+
+	// 直接地址
+	for (int i = 0; i < 4; i++)
+	{
+		// menu的地址
+		const short int addr = temp_inode->addr[i];
+		if (addr >= 0)
+		{
+			if (cur_num >= blk_offset)
+			{
+				// 拿到menu地址指向的数据块
+				getDataByBlkId(addr, temp_data_blk);
+				long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
+				if (read_size <= 0)
+					read_size = 0;
+				memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+				data_offset = 0;
+				// 更新已经读过的字节数
+				already_read_size += read_size;
+				// 更新buf指针
+				cur_buf_pointer += read_size;
+				if (already_read_size >= size)
+				{
+					goto error;
+				}
+			}
+		}
+		else
+			goto error;
+
+		if (cur_num == blk_num)
+			goto error;
+		else
+			cur_num++;
+	}
+
+	// 一次间接
+	// menu的地址
+	const short int first_Indir = temp_inode->addr[4];
+	if (first_Indir >= 0)
+	{
+		// 获取menu地址指向的一次间接块
+		getDataByBlkId(first_Indir, first_data_blk);
+		for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+		{
+			const short int addr = retShortIntFromData(first_data_blk->data, i);
+
+			if (addr >= 0)
+			{
+				if (cur_num >= blk_offset)
+				{
+					// 拿到menu地址指向的数据块
+					getDataByBlkId(addr, temp_data_blk);
+					long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
+					if (read_size <= 0)
+						read_size = 0;
+					memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+					data_offset = 0;
+					// 更新已经读过的字节数
+					already_read_size += read_size;
+					// 更新buf指针
+					cur_buf_pointer += read_size;
+					if (already_read_size >= size)
+					{
+						goto error;
+					}
+				}
+			}
+			else
+				goto error;
+
+			if (cur_num == blk_num)
+				goto error;
+			else
+				cur_num++;
+		}
+	}
+	else
+		goto error;
+
+	// 二次间接
+	const short int second_Indir = temp_inode->addr[5];
+	if (second_Indir >= 0)
+	{
+		getDataByBlkId(second_Indir, second_data_blk);
+		for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
+		{
+			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+			getDataByBlkId(first_Indir, first_data_blk);
+			for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+			{
+				const short int addr = retShortIntFromData(first_data_blk->data, i);
+				if (addr >= 0)
+				{
+					if (cur_num >= blk_offset)
+					{
+						// 拿到menu地址指向的数据块
+						getDataByBlkId(addr, temp_data_blk);
+						long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
+						if (read_size <= 0)
+							read_size = 0;
+						memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+						data_offset = 0;
+						// 更新已经读过的字节数
+						already_read_size += read_size;
+						// 更新buf指针
+						cur_buf_pointer += read_size;
+						if (already_read_size >= size)
+						{
+							goto error;
+						}
+					}
+				}
+				else
+					goto error;
+
+				if (cur_num == blk_num)
+					goto error;
+				else
+					cur_num++;
+			}
+		}
+	}
+	else
+		goto error;
+
+	// 三次间接
+	short int third_Indir = temp_inode->addr[6];
+	if (third_Indir >= 0)
+	{
+		getDataByBlkId(third_Indir, third_data_blk);
+		for (int i = 0; i < third_data_blk->size; i += sizeof(short int))
+		{
+			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
+			getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
+			for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
+			{
+				const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+				getDataByBlkId(first_Indir, first_data_blk);
+				for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+				{
+					const short int addr = retShortIntFromData(first_data_blk->data, i);
+					if (addr >= 0)
+					{
+						if (cur_num >= blk_offset)
+						{
+							// 拿到menu地址指向的数据块
+							getDataByBlkId(addr, temp_data_blk);
+							long read_size = min(temp_data_blk->size - data_offset, (size - already_read_size));
+							if (read_size <= 0)
+								read_size = 0;
+							memcpy(cur_buf_pointer, temp_data_blk->data + data_offset, read_size);
+							data_offset = 0;
+							// 更新已经读过的字节数
+							already_read_size += read_size;
+							// 更新buf指针
+							cur_buf_pointer += read_size;
+							if (already_read_size >= size)
+							{
+								goto error;
+							}
+						}
+					}
+					else
+						goto error;
+
+					if (cur_num == blk_num)
+						goto error;
+					else
+						cur_num++;
+				}
+			}
+		}
+	}
+	else
+		goto error;
+
+	printSuccess("writeFileDataByInodeId: success");
+error:
+	free(first_data_blk);
+	free(second_data_blk);
+	free(third_data_blk);
+	free(temp_data_blk);
+	free(temp_inode);
+	return ret;
 }
 
 // 检查某个块是否被用了 0表示没有, 1表示被用了, -1表示错误
