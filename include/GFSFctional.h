@@ -15,5 +15,6 @@ void *GFS_init(struct fuse_conn_info *conn, struct fuse_config *cfg);
 int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi);
 int GFS_mknod(const char *path, mode_t mode, dev_t dev);
 int GFS_unlink(const char *path);
+int GFS_open(const char *path, struct fuse_file_info *fi);
 
 #endif
