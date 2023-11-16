@@ -1864,7 +1864,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
-			writeDataByBlkId(first_addr, first_data_blk);
+			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
 
@@ -1921,7 +1921,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
-			writeDataByBlkId(first_addr, first_data_blk);
+			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
 
@@ -1992,7 +1992,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
-			writeDataByBlkId(first_addr, first_data_blk);
+			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
 
