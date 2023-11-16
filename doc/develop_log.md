@@ -12,7 +12,7 @@
 - [ ] 文件系统实现(GanshinFS)
 - [x] GFS_init初始化
 - [x] GFS_getattr获取文件属性
-- [ ] GFS_mknod创建文件
+- [x] GFS_mknod创建文件
 - [ ] 优化disk的地址逻辑, 弄成不用手动设置
 - [ ] 将所有的步骤写成脚本
 - [ ] 解决哈希冲突

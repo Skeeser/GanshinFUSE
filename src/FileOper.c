@@ -95,11 +95,19 @@ int writeDataByBlkId(short int blk_id, const struct GDataBlock *data_blk)
 // inode号, 即规定以根目录的inode的id为0
 int getInodeByInodeId(const short int inode_id, struct GInode *inode_blk)
 {
+	int ret = 0;
+	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
+
+	if (inode_id < 0)
+	{
+		ret = -1;
+		printError("getInodeByInodeId: inode id less than 0.");
+		goto error;
+	}
 	// inode号转换成块号
 	const int inode_start = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP;
 	const int blk_offset = inode_start + inode_id / MAX_INODE_IN_BLOCK;
 	const int inode_offset = inode_id % MAX_INODE_IN_BLOCK;
-	struct GDataBlock *gblk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
 
 	int ret = getDataByBlkId(blk_offset, gblk);
 	if (ret != 0)
@@ -109,8 +117,9 @@ int getInodeByInodeId(const short int inode_id, struct GInode *inode_blk)
 	}
 
 	memcpy(inode_blk, gblk->data + inode_offset * sizeof(struct GInode), sizeof(struct GInode));
+error:
 	free(gblk);
-	return 0;
+	return ret;
 }
 
 // 根据块号, 写入Inode, 一个块多个inode

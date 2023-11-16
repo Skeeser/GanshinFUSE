@@ -120,22 +120,28 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 	(void)fi;
 	int ret = size;
 
-	struct file_directory *attr = malloc(sizeof(struct file_directory));
-	// 打开path所指的对象，将其file_directory读到attr中
-	get_fd_to_attr(path, attr);
+	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 
-	// 然后检查要写入数据的位置是否越界
-	if (offset > attr->fsize)
+	// 根据路径读取file_dir
+	if (getFileDirByPath(path, file_dir) == -1)
 	{
-		free(attr);
-		printf("MFS_write：offset越界，函数结束返回\n\n");
-		return -EFBIG;
+		ret = -ENOENT;
+		printError("GFS_write: get file dir failed!");
+		goto error;
 	}
-	long start_blk = attr->nStartBlock;
+
+	// 检查要偏移量是否越界
+	if (offset > file_dir->fsize)
+	{
+		printError("GFS_write: offset over fsize!");
+		ret = -EFBIG;
+		goto error;
+	}
+
+	long file_inode = file_dir->nInodeBlock;
 	if (start_blk == -1)
 	{
 		printf("MFS_write：该文件为空（无起始块），函数结束返回\n\n");
-		free(attr);
 		return -errno;
 	}
 	int res, num, p_offset = offset; // p_offset用来记录修改前最后一个文件块的位置
@@ -235,8 +241,6 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 		size = -errno;
 
 error:
-	free(attr);
-	free(data_blk);
-	free(next_blk);
+	free(file_dir);
 	return ret;
 }
