@@ -234,3 +234,4 @@ bitmap初始化问题
 写一个判断该块是否free的函数  
 根目录的st_size不太对  
 removeFileByPath把超级块给弄成0了
+写入文件或者读取不全

@@ -87,25 +87,28 @@ TEST(FILE, removeFile)
     free(fd);
 }
 
-TEST(FILE, writeFile)
+TEST(GFS, writeFile)
 {
+    int ret = removeFileByPath("/hello.txt", GFILE);
+    ASSERT_EQ(ret, 0);
+
     // 创建文件
-    int ret = createFileByPath("/hello.txt", GFILE);
+    ret = createFileByPath("/hello.txt", GFILE);
     ASSERT_EQ(ret, 0);
 
     const char *test_data = "Hello, GanshinFuse!";
 
     // 写入文件
-    ret = GFS_write("/hello.txt", test_data, sizeof(test_data), 0, (struct fuse_file_info *)NULL);
+    ret = GFS_write("/hello.txt", test_data, strlen(test_data) + 1, 0, (struct fuse_file_info *)NULL);
     ASSERT_EQ(ret, 0);
 }
 
-TEST(FILE, readFile)
+TEST(GFS, readFile)
 {
     const char *test_data = "Hello, GanshinFuse!";
-    char *read_data = (char *)malloc(sizeof(test_data));
+    char *read_data = (char *)malloc(strlen(test_data) + 1);
     // 读取文件
-    int ret = GFS_read("/hello.txt", read_data, sizeof(test_data), 0, (struct fuse_file_info *)NULL);
+    int ret = GFS_read("/hello.txt", read_data, strlen(test_data) + 1, 0, (struct fuse_file_info *)NULL);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(read_data, test_data);
     free(read_data);
