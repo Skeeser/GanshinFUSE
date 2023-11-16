@@ -68,9 +68,8 @@ Linux
 
 <br>
 
-## 快速开始
 
-### 依赖检查
+## 依赖检查
 - cmake
 - gcc
 - libfuse
@@ -79,8 +78,8 @@ Linux
 
 <br>
 
-### 构建
-#### 下载本项目
+## 构建
+### 下载本项目
 ```shell
 cd ~
 git clone https://github.com/Skeeser/GanshinFUSE.git
@@ -88,7 +87,7 @@ git clone https://github.com/Skeeser/GanshinFUSE.git
 
 <br>
 
-#### 脚本一行构建
+### 脚本一行构建
 ```shell
 sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 ```
@@ -110,8 +109,8 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 
 <br>
 
-### 编译
-#### 设置debug 或者 release版本
+## 编译
+### 设置debug 或者 release版本
 修改CMakeList.txt中的  
 ```c
 option(USE_DEBUG "Build with debug flags" ON)
@@ -121,7 +120,7 @@ release版本--OFF
 
 <br>
 
-#### 执行编译
+### 执行编译
 ```shell
 cd ~/GanshinFUSE/
 mkdir build
@@ -132,13 +131,13 @@ make
 
 <br>
 
-### 运行
-#### 在build文件夹下
+## 运行
+### 在build文件夹下
 ```shell
 cd build/
 ```
 
-#### 初始化
+### 初始化
 
 ```shell
 ./GanshinInit
@@ -152,17 +151,17 @@ cd build/
 
 <br>
 
-#### GanshinFS 启动
+### GanshinFS 启动
 ```shell
 ./GanshinFS
 ```
 
-#### 运行测试
+### 运行测试
 ```shell
 ./GanhsinTest
 ```
 
-### 调试工具
+## 调试工具
 LLDB
 详细使用见[开发文档](doc/develop_log.md)
 
