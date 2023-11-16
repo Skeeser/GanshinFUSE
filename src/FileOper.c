@@ -1044,7 +1044,7 @@ int getFileDirByPath(const char *path, struct GFileDir *attr)
 	if (strcmp(tmp_path, "/") == 0)
 	{
 		ret = 0;
-		attr->flag = 2; // 2 menu
+		attr->flag = (int)GDIRECTORY; // 2 menu
 		attr->nMenuInode = start_inode;
 		attr->nInodeBlock = start_inode;
 		printSuccess("getFileDirToAttr: this is a root menu");
@@ -1515,7 +1515,7 @@ int createFileByPath(const char *path, enum GTYPE file_type)
 	strcpy(file_dir->fext, fext);
 
 	file_dir->nMenuInode = menu_inode_num;
-	file_dir->flag = file_type;
+	file_dir->flag = (int)file_type;
 
 	// 根据哈希值在目录创建filedir
 	if ((ret = createFileDirByHash(hash_num, menu_inode_num, file_dir)) != 0)
@@ -1618,6 +1618,144 @@ int removeFileDataByInodeId(const short int inode_id)
 	// 将原有占了bitmap的块置0
 	// 默认文件是顺序存储, 遍历
 	const int blk_num = temp_inode->st_size / FS_BLOCK_SIZE;
+	int cur_num = 0;
+
+	// 直接地址
+	for (int i = 0; i < 4; i++)
+	{
+		const short int addr = temp_inode->addr[i];
+		if (addr >= 0)
+			unsetBitmapUsed(start_data_bitmap, addr, 1);
+		else
+			goto error;
+
+		if (cur_num == blk_num)
+			goto error;
+		else
+			cur_num++;
+	}
+
+	// 一次间接
+	const short int first_Indir = temp_inode->addr[4];
+	if (first_Indir >= 0)
+	{
+		unsetBitmapUsed(start_data_bitmap, first_Indir, 1);
+		getDataByBlkId(first_Indir, first_data_blk);
+		for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+		{
+			const short int addr = retShortIntFromData(first_data_blk->data, i);
+
+			if (addr >= 0)
+				unsetBitmapUsed(start_data_bitmap, addr, 1);
+			else
+				goto error;
+
+			if (cur_num == blk_num)
+				goto error;
+			else
+				cur_num++;
+		}
+	}
+	else
+		goto error;
+
+	// 二次间接
+	const short int second_Indir = temp_inode->addr[5];
+	if (second_Indir >= 0)
+	{
+		unsetBitmapUsed(start_data_bitmap, second_Indir, 1);
+		getDataByBlkId(second_Indir, second_data_blk);
+		for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
+		{
+			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+			unsetBitmapUsed(start_data_bitmap, first_Indir, 1);
+			getDataByBlkId(first_Indir, first_data_blk);
+			for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+			{
+				const short int addr = retShortIntFromData(first_data_blk->data, i);
+				if (addr >= 0)
+					unsetBitmapUsed(start_data_bitmap, addr, 1);
+				else
+					goto error;
+
+				if (cur_num == blk_num)
+					goto error;
+				else
+					cur_num++;
+			}
+		}
+	}
+	else
+		goto error;
+
+	// 三次间接
+	short int third_Indir = temp_inode->addr[6];
+	if (third_Indir >= 0)
+	{
+		unsetBitmapUsed(start_data_bitmap, third_Indir, 1);
+		getDataByBlkId(third_Indir, third_data_blk);
+		for (int i = 0; i < third_data_blk->size; i += sizeof(short int))
+		{
+			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
+			unsetBitmapUsed(start_data_bitmap, second_Indir, 1);
+			getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
+			for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
+			{
+				const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+				unsetBitmapUsed(start_data_bitmap, first_Indir, 1);
+				getDataByBlkId(first_Indir, first_data_blk);
+				for (int i = 0; i < first_data_blk->size; i += sizeof(short int))
+				{
+					const short int addr = retShortIntFromData(first_data_blk->data, i);
+					if (addr >= 0)
+						unsetBitmapUsed(start_data_bitmap, addr, 1);
+					else
+						goto error;
+
+					if (cur_num == blk_num)
+						goto error;
+					else
+						cur_num++;
+				}
+			}
+		}
+	}
+	else
+		goto error;
+
+	printSuccess("removeFileDataByInodeId: success");
+error:
+	free(first_data_blk);
+	free(second_data_blk);
+	free(third_data_blk);
+	free(temp_inode);
+	return ret;
+}
+
+// 根据inode id获取文件数据
+int getFileDataByInodeId(const short int inode_id, const unsigned long size, const long offset, char *buf)
+{
+
+	int ret = 0;
+	const int start_data_bitmap = SUPER_BLOCK + INODE_BITMAP;
+	const long blk_offset = offset / MAX_DATA_IN_BLOCK;
+	const long data_offset = offset % MAX_DATA_IN_BLOCK;
+
+	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// int ADDR_PER_BLK = MAX_DATA_IN_BLOCK / sizeof(short int);
+	struct GDataBlock *first_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *second_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *third_data_blk = malloc(sizeof(struct GDataBlock));
+
+	if (getInodeByInodeId(inode_id, temp_inode) != 0)
+	{
+		ret = -1;
+		goto error;
+	}
+
+	// 将原有占了bitmap的块置0
+	// 默认文件是顺序存储, 遍历
+	const int blk_num = temp_inode->st_size / MAX_DATA_IN_BLOCK;
 	int cur_num = 0;
 
 	// 直接地址
