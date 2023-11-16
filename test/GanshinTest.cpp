@@ -82,6 +82,16 @@ TEST(FILE, removeFile)
     free(fd);
 }
 
+TEST(FILE, writeFile)
+{
+    // 创建文件
+    int ret = createFileByPath("/hello.txt", GFILE);
+    ASSERT_EQ(ret, 0);
+
+    // 写入文件
+    // ret = write
+}
+
 TEST(FILE, readFile)
 {
     // 等写入文件写完后再测试

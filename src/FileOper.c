@@ -2132,7 +2132,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		{
 			short int third_addr = *addr;
 			// 获取menu地址指向的一次间接块
-			getAddrDataDirectIndex(third_addr, third_data_blk);
+			getAddrDataIndirectIndex(&third_addr, i, third_data_blk);
 			for (int i = 0; i < third_data_blk->size; i += sizeof(short int))
 			{
 				short int second_addr = third_addr;
@@ -2181,7 +2181,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 	printSuccess("writeFileDataByInodeId: success");
 error:
 	// 更新inode
-	writeInodeByInodeId(temp_inode, inode_id);
+	writeInodeByInodeId(inode_id, temp_inode);
 
 	free(first_data_blk);
 	free(second_data_blk);
