@@ -88,14 +88,21 @@ TEST(FILE, writeFile)
     int ret = createFileByPath("/hello.txt", GFILE);
     ASSERT_EQ(ret, 0);
 
+    const char *test_data = "Hello, GanshinFuse!";
+
     // 写入文件
-    // ret = write
+    ret = GFS_write("/hello.txt", test_data, sizeof(test_data), 0, (struct fuse_file_info *)NULL);
+    ASSERT_EQ(ret, 0);
 }
 
 TEST(FILE, readFile)
 {
-    // 等写入文件写完后再测试
-    ;
+    const char *test_data = "Hello, GanshinFuse!";
+    char *read_data = (char *)malloc(sizeof(test_data));
+    // 读取文件
+    int ret = GFS_read("/hello.txt", read_data, sizeof(test_data), 0, (struct fuse_file_info *)NULL);
+    ASSERT_EQ(ret, 0);
+    ASSERT_STRCASEEQ(read_data, test_data);
 }
 
 int main(int argc, char *argv[])
