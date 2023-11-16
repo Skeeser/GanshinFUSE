@@ -25,6 +25,7 @@ void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk);
 void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlock *data_blk);
 void initShortIntToData(char *data);
 int writeShortIntToData(const short int addr, const int offset, char *data);
+int removeFileDataByInodeId(const short int inode_id);
 
 // Inode
 int getInodeByInodeId(const short int inode_id, struct GInode *inode_blk);
@@ -34,6 +35,7 @@ int getInodeBlkByPath(const char *path, short int *file_inode);
 int getFreeInodeBlk(const int need_num, short int *start_blk);
 int initInode(struct GInode *inode);
 int updateMenuInode(const short int cur_i, struct GInode *menu_inode);
+int rmUpdateMenuInode(const short int cur_i, struct GInode *menu_inode);
 
 // Bitmap
 int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int num);
@@ -49,6 +51,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 int getFileDirByPath(const char *path, struct GFileDir *attr);
 void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, struct GFileDir *p_fd);
 int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk);
+int removeFileDirFromDataBlk(const int offset, struct GDataBlock *data_blk);
 int initFileDir(struct GFileDir *file_dir);
 
 // File
