@@ -27,6 +27,7 @@ void initShortIntToData(char *data);
 int writeShortIntToData(const short int addr, const int offset, char *data);
 int removeFileDataByInodeId(const short int inode_id);
 int getFileDataByInodeId(const short int inode_id, const unsigned long size, const long offset, char *buf);
+int writeFileDataByInodeId(const short int inode_id, const unsigned long size, const long offset, const char *buf);
 
 // Inode
 int getInodeByInodeId(const short int inode_id, struct GInode *inode_blk);

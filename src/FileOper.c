@@ -1958,6 +1958,12 @@ error:
 	return ret;
 }
 
+// 根据inode id写入文件数据
+int writeFileDataByInodeId(const short int inode_id, const unsigned long size, const long offset, const char *buf)
+{
+	;
+}
+
 // 检查某个块是否被用了 0表示没有, 1表示被用了, -1表示错误
 int checkBitmapUsed(const long start_bitmap_blk, const long offset_bit)
 {
