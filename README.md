@@ -21,7 +21,7 @@
 
 [简体中文](README_ZH.md) | [English](README_EN.md)
 
-OS File System Based on FUSE.  
+OS File System Based on libfuse.  
 基于libfuse实现的类UFS文件系统  
 如果觉得不错的话, 麻烦点个star吧 :wink:​  
 
@@ -147,7 +147,7 @@ cd build/
 能够看到本项目的logo
 
 <div align="left" >
-<img alt="logo2" src="assets/logo.png" />
+<img alt="logo2" src="assets/logo2.png" />
 </div>
 
 <br>
