@@ -37,6 +37,7 @@ int updateMenuInode(const short int cur_i, struct GInode *menu_inode);
 
 // Bitmap
 int setBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int num);
+int unsetBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int num);
 
 // Utils
 void fillStatByInode(struct GInode *inode, struct stat *st);

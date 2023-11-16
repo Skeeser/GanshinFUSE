@@ -330,6 +330,89 @@ error:
 	return ret;
 }
 
+// 将使用过的块重新变为空闲块
+int unsetBitmapUsed(const long start_bitmap_blk, const long offset_bit, const int num)
+{
+	int ret = 0;
+	// 读取文件
+	FILE *fp = NULL;
+	fp = fopen(DISK_PATH, "r+");
+	if (fp == NULL)
+	{
+		ret = -1;
+		printError("unsetBitmapUsed: Open disk file failed! The file may don't exits.");
+		printf("disk_path: %s\n", DISK_PATH);
+		goto error;
+	}
+
+	const long offset_temp_byte = offset_bit / 8;
+	const long offset_temp_bit = offset_bit % 8;
+
+	// 移动指针到文件的DataBitmap块
+	if (fseek(fp, FS_BLOCK_SIZE * start_bitmap_blk + offset_temp_byte, SEEK_SET) != 0)
+	{
+		ret = -1;
+		printError("unsetBitmapUsed: DataBitmap fseek failed!");
+		goto error;
+	}
+
+	unsigned char temp_byte = 0x00;
+	fread(&temp_byte, sizeof(unsigned char), 1, fp);
+	// 返回之前的指针
+	fseek(fp, -1 * sizeof(temp_byte), SEEK_CUR);
+	// 处理开头的offset的bit情况
+	for (int i = 0; i < min(num, (8 - offset_temp_bit)); i++)
+	{
+		unsigned char mask = 0x80;
+		mask >>= (offset_temp_bit + i);
+		// 判断对应位是否为1
+		if ((mask & temp_byte) == mask)
+		{
+			// 若为1,用异或操作置零
+			temp_byte ^= mask;
+		}
+	}
+	fwrite(&temp_byte, sizeof(unsigned char), 1, fp);
+
+	// 处理一整个Byte都是num区间内的情况
+	const int set_byte_num = (num + offset_temp_bit) / 8 - 1;
+	if (set_byte_num > 0)
+	{
+		unsigned char a[set_byte_num];
+		memset(a, 0x00, sizeof(a));
+		fwrite(a, sizeof(a), 1, fp);
+	}
+
+	if ((num + offset_temp_bit) > 8)
+	{
+		// 处理一整个Byte只有一部分在num区间内的情况
+		temp_byte = 0x00;
+		fread(&temp_byte, sizeof(unsigned char), 1, fp);
+		// 返回之前的指针
+		fseek(fp, -1, SEEK_CUR);
+		const int rest_used_bit = (num + offset_temp_bit) % 8;
+		// 利用循环置1
+		for (int i = 0; i < rest_used_bit; i++)
+		{
+			unsigned char mask = 0x01;
+			mask <<= (7 - i);
+			// 判断对应位是否为1
+			if ((mask & temp_byte) == mask)
+			{
+				// 若为1,用异或操作置零
+				temp_byte ^= mask;
+			}
+		}
+		fwrite(&temp_byte, sizeof(int), 1, fp);
+	}
+
+	printSuccess("unsetBitmapUsed: set free bit done!");
+
+error:
+	fclose(fp);
+	return ret;
+}
+
 // 找到data空闲块
 int getFreeDataBlk(const int need_num, short int *start_blk)
 {
