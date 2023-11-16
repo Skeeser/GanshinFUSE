@@ -53,7 +53,7 @@ int getDataByBlkId(const short int blk_id, struct GDataBlock *data_blk)
 // 根据块号, 将文件数据GDataBlock写入文件
 int writeDataByBlkId(short int blk_id, const struct GDataBlock *data_blk)
 {
-
+	int ret = 0;
 	// 读取文件
 	FILE *fp = NULL;
 	fp = fopen(DISK_PATH, "r+"); // 打开文件
@@ -63,32 +63,36 @@ int writeDataByBlkId(short int blk_id, const struct GDataBlock *data_blk)
 		printf("disk_path: %s\n", DISK_PATH);
 		return -1;
 	}
-	// printSuccess("Open disk file success!");
+
+	// 判断传进来的参数是否为负
+	if (blk_id < 0)
+	{
+		printError("writeDataByBlkId: blk id less than 0!");
+		ret = -1;
+		goto error;
+	}
 
 	// 文件打开后，就用blk_id * FS_BLOCK_SIZE作为偏移量
 	fseek(fp, blk_id * FS_BLOCK_SIZE, SEEK_SET);
 
-	if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) > 0)
-	{
-		printSuccess("writeDataByBlkId: write data block success!");
-	}
-	else
+	if (fwrite(data_blk, sizeof(struct GDataBlock), 1, fp) <= 0)
 	{
 		printError("writeDataByBlkId: write data block failed!");
-		fclose(fp);
-		return -1;
+		ret = -1;
+		goto error;
 	}
 
 	// 判断是否正确读取
 	if (ferror(fp))
 	{
 		printError("writeDataByBlkId: write disk file failed!");
-		fclose(fp);
-		return -1;
+		ret = -1;
+		goto error;
 	}
 
+error:
 	fclose(fp);
-	return 0;
+	return ret;
 }
 
 // 根据inode号, 读取Inode
@@ -2265,9 +2269,6 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		// 获取地址和data blk
 		getDataByBlkId(*first_addr, first_data_blk);
 
-		// 更新menu inode
-		rmUpdateMenuInode(menu_cur_i, menu_inode);
-
 		// 回收inode
 		getFileDirFromDataBlk(first_data_blk, offset, file_dir);
 		const short int inode_id = file_dir->nInodeBlock;
@@ -2286,6 +2287,9 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 			unsetBitmapUsed(start_databitmap_blk, *first_addr, 1);
 			*first_addr = -1;
 		}
+
+		// 更新menu inode
+		rmUpdateMenuInode(menu_cur_i, menu_inode);
 	}
 	else if (hash_num < FD_FIRST_INDIR)
 	{
@@ -2293,8 +2297,6 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		short int *first_addr = &menu_inode->addr[4];
 		// 获取地址和data blk
 		getDataByBlkId(*first_addr, first_data_blk);
-		// 更新menu inode
-		rmUpdateMenuInode(menu_cur_i, menu_inode);
 
 		// 计算偏移
 		int offset = (((hash_num - FD_ZEROTH_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
@@ -2333,6 +2335,8 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 			// 将菜单上面的地址写回去
 			*first_addr = -1;
 		}
+		// 更新menu inode
+		rmUpdateMenuInode(menu_cur_i, menu_inode);
 	}
 	else if (hash_num < FD_SECOND_INDIR)
 	{
@@ -2340,8 +2344,6 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		short int *first_addr = &menu_inode->addr[5];
 		// 获取地址和data blk
 		getDataByBlkId(*first_addr, first_data_blk);
-		// 更新menu inode
-		rmUpdateMenuInode(menu_cur_i, menu_inode);
 
 		int offset = (((hash_num - FD_FIRST_INDIR) / (ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
@@ -2390,6 +2392,8 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 			// 将菜单上面的地址写回去
 			*first_addr = -1;
 		}
+		// 更新menu inode
+		rmUpdateMenuInode(menu_cur_i, menu_inode);
 	}
 	else if (hash_num < MAX_HASH_SIZE)
 	{
@@ -2398,8 +2402,6 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		// 获取地址和data blk
 		// 获取地址和data blk
 		getDataByBlkId(*first_addr, first_data_blk);
-		// 更新menu inode
-		rmUpdateMenuInode(menu_cur_i, menu_inode);
 
 		int offset = (((hash_num - FD_SECOND_INDIR) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
@@ -2461,6 +2463,9 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 			// 将菜单上面的地址写回去
 			*first_addr = -1;
 		}
+
+		// 更新menu inode
+		rmUpdateMenuInode(menu_cur_i, menu_inode);
 	}
 	else
 	{

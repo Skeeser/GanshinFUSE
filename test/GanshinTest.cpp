@@ -76,9 +76,14 @@ TEST(FILE, removeFile)
 {
     int ret = removeFileByPath("/test.jpg", GFILE);
     ASSERT_EQ(ret, 0);
+
     struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
     ret = getFileDirByPath("/test.jpg", fd);
     ASSERT_EQ(ret, -1);
+    struct GSuperBlock *sp_blk;
+    sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
+    getSuperBlock(sp_blk);
+    free(sp_blk);
     free(fd);
 }
 
@@ -103,6 +108,7 @@ TEST(FILE, readFile)
     int ret = GFS_read("/hello.txt", read_data, sizeof(test_data), 0, (struct fuse_file_info *)NULL);
     ASSERT_EQ(ret, 0);
     ASSERT_STRCASEEQ(read_data, test_data);
+    free(read_data);
 }
 
 int main(int argc, char *argv[])
