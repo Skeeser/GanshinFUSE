@@ -60,6 +60,8 @@ int GFS_unlink(const char *path)
 // 此函数用来打开文件
 int GFS_open(const char *path, struct fuse_file_info *fi)
 {
+	(void)fi;
+	(void)path;
 	return 0;
 }
 
@@ -102,4 +104,11 @@ error:
 	free(file_dir);
 	free(data_blk);
 	return ret;
+}
+
+int GFS_release(const char *path, struct fuse_file_info *fi)
+{
+	(void)fi;
+	(void)path;
+	return 0;
 }

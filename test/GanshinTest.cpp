@@ -82,6 +82,12 @@ TEST(FILE, removeFile)
     free(fd);
 }
 
+TEST(FILE, readFile)
+{
+    // 等写入文件写完后再测试
+    ;
+}
+
 int main(int argc, char *argv[])
 {
     testing::InitGoogleTest(&argc, argv);
