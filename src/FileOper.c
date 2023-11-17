@@ -2579,24 +2579,24 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		getDataByBlkId(*first_addr, first_data_blk);
 
 		// 计算偏移
-		int offset = (((hash_num - FD_ZEROTH_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
+		int first_offset = (((hash_num - FD_ZEROTH_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int second_addr = retShortIntFromData(first_data_blk->data, offset);
+		const short int second_addr = retShortIntFromData(first_data_blk->data, first_offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(second_addr, second_data_blk);
 
 		// 重新计算偏移
-		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		int second_offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 
 		// 回收最终指向的文件的inode
-		getFileDirFromDataBlk(second_data_blk, offset, file_dir);
+		getFileDirFromDataBlk(second_data_blk, second_offset, file_dir);
 		const short int inode_id = file_dir->nInodeBlock;
 		unsetBitmapUsed(start_inodebitmap_blk, inode_id, 1);
 		// 回收inode中的data块
 		removeFileDataByInodeId(inode_id);
 
 		// 从data blk中删除file dir
-		removeFileDirFromDataBlk(offset, second_data_blk);
+		removeFileDirFromDataBlk(second_offset, second_data_blk);
 		// 将data blk写回到文件
 		writeDataByBlkId(second_addr, second_data_blk);
 
@@ -2606,7 +2606,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		{
 			first_data_blk->size -= sizeof(short int);
 			// 将对应位置写上-1
-			writeShortIntToData(first_data_blk->data, );
+			writeShortIntToData(-1, first_offset, first_data_blk->data);
 			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
@@ -2627,28 +2627,28 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		// 获取地址和data blk
 		getDataByBlkId(*first_addr, first_data_blk);
 
-		int offset = (((hash_num - FD_FIRST_INDIR) / (ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
+		int first_offset = (((hash_num - FD_FIRST_INDIR) / (ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int second_addr = retShortIntFromData(first_data_blk->data, offset);
+		const short int second_addr = retShortIntFromData(first_data_blk->data, first_offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(second_addr, second_data_blk);
 
-		offset = (((hash_num - FD_FIRST_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
+		int second_offset = (((hash_num - FD_FIRST_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int third_addr = retShortIntFromData(second_data_blk->data, offset);
+		const short int third_addr = retShortIntFromData(second_data_blk->data, second_offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(third_addr, third_data_blk);
 
-		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		int third_offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 回收最终指向的文件的inode
-		getFileDirFromDataBlk(third_data_blk, offset, file_dir);
+		getFileDirFromDataBlk(third_data_blk, third_offset, file_dir);
 		const short int inode_id = file_dir->nInodeBlock;
 		unsetBitmapUsed(start_inodebitmap_blk, inode_id, 1);
 		// 回收inode中的data块
 		removeFileDataByInodeId(inode_id);
 
 		// 从data blk中删除file dir
-		removeFileDirFromDataBlk(offset, third_data_blk);
+		removeFileDirFromDataBlk(third_offset, third_data_blk);
 		// 将data blk写回到文件
 		writeDataByBlkId(third_addr, third_data_blk);
 
@@ -2657,6 +2657,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (third_data_blk->size <= 0)
 		{
 			second_data_blk->size -= sizeof(short int);
+			writeShortIntToData(-1, second_offset, second_data_blk->data);
 			writeDataByBlkId(second_addr, second_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, third_addr, 1);
 		}
@@ -2664,6 +2665,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
+			writeShortIntToData(-1, first_offset, first_data_blk->data);
 			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
@@ -2685,34 +2687,34 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		// 获取地址和data blk
 		getDataByBlkId(*first_addr, first_data_blk);
 
-		int offset = (((hash_num - FD_SECOND_INDIR) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
+		int first_offset = (((hash_num - FD_SECOND_INDIR) / (ADDR_PER_BLK * ADDR_PER_BLK * FD_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int second_addr = retShortIntFromData(first_data_blk->data, offset);
+		const short int second_addr = retShortIntFromData(first_data_blk->data, first_offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(second_addr, second_data_blk);
 
-		offset = (((hash_num - FD_SECOND_INDIR) / (FD_PER_BLK * ADDR_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
+		int second_offset = (((hash_num - FD_SECOND_INDIR) / (FD_PER_BLK * ADDR_PER_BLK)) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int third_addr = retShortIntFromData(second_data_blk->data, offset);
+		const short int third_addr = retShortIntFromData(second_data_blk->data, second_offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(third_addr, third_data_blk);
 
-		offset = (((hash_num - FD_SECOND_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
+		int third_offset = (((hash_num - FD_SECOND_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
 		// 根据偏移计算出第一块间接索引块的地址
-		const short int fourth_addr = retShortIntFromData(third_data_blk->data, offset);
+		const short int fourth_addr = retShortIntFromData(third_data_blk->data, third_offset);
 		// 获取第一块间接索引块指向的data  blk
 		getDataByBlkId(fourth_addr, fourth_data_blk);
 
-		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
+		int fourth_offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 回收最终指向的文件的inode
-		getFileDirFromDataBlk(fourth_data_blk, offset, file_dir);
+		getFileDirFromDataBlk(fourth_data_blk, fourth_offset, file_dir);
 		const short int inode_id = file_dir->nInodeBlock;
 		unsetBitmapUsed(start_inodebitmap_blk, inode_id, 1);
 		// 回收inode中的data块
 		removeFileDataByInodeId(inode_id);
 
 		// 从data blk中删除file dir
-		removeFileDirFromDataBlk(offset, fourth_data_blk);
+		removeFileDirFromDataBlk(fourth_offset, fourth_data_blk);
 		// 将data blk写回到文件
 		writeDataByBlkId(fourth_addr, fourth_data_blk);
 
@@ -2721,6 +2723,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (fourth_data_blk->size <= 0)
 		{
 			third_data_blk->size -= sizeof(short int);
+			writeShortIntToData(-1, third_offset, third_data_blk->data);
 			writeDataByBlkId(third_addr, third_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, fourth_addr, 1);
 		}
@@ -2728,6 +2731,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (third_data_blk->size <= 0)
 		{
 			second_data_blk->size -= sizeof(short int);
+			writeShortIntToData(-1, second_offset, second_data_blk->data);
 			writeDataByBlkId(second_addr, second_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, third_addr, 1);
 		}
@@ -2735,6 +2739,7 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
+			writeShortIntToData(-1, first_offset, first_data_blk->data);
 			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
