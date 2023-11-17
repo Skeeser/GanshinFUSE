@@ -1580,6 +1580,14 @@ int removeFileByPath(const char *path, enum GTYPE file_type)
 		goto error;
 	}
 
+	// 检查文件类型是否对的上
+	if (file_dir->flag != (int)file_type)
+	{
+		ret = -1;
+		printError("removeFileByPath: the file type is wrong.");
+		goto error;
+	}
+
 	// 文件存在, 要进行删除
 	// 计算哈希
 	int hash_num = hash(fall_name);
