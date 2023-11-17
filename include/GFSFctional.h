@@ -22,5 +22,6 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 int GFS_mkdir(const char *path, mode_t mode);
 int GFS_rmdir(const char *path);
 int GFS_access(const char *path, int flag);
+int GFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags);
 
 #endif

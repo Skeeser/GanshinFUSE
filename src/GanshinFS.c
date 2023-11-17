@@ -19,7 +19,7 @@ static const struct fuse_operations GFS_oper = {
     .mkdir = GFS_mkdir,     // 创建目录
     .rmdir = GFS_rmdir,     // 删除目录
     .access = GFS_access,   // 进入目录
-    // .readdir	= MFS_readdir,  // 读取目录
+    .readdir = GFS_readdir, // 读取目录
 };
 
 int main(int argc, char *argv[])
