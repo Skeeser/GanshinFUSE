@@ -20,5 +20,6 @@ int GFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse
 int GFS_release(const char *path, struct fuse_file_info *fi);
 int GFS_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 int GFS_mkdir(const char *path, mode_t mode);
+int GFS_rmdir(const char *path);
 
 #endif

@@ -160,3 +160,9 @@ int GFS_mkdir(const char *path, mode_t mode)
 	(void)mode;
 	return createFileByPath(path, GDIRECTORY);
 }
+
+// 此函数用来删除目录
+int GFS_rmdir(const char *path)
+{
+	return removeFileByPath(path, GDIRECTORY);
+}
