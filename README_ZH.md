@@ -37,12 +37,13 @@ OS File System Based on libfuse.
 <br>
 
 ## 功能特性
-- 开创性用了shell脚本安装依赖, 一行命令轻松安装依赖
-- 用cmake生成makefile构建, 简单高效, 跨平台性强
-- 使用gtest进行单元测试, 是代码鲁棒性比较强
-- 利用 FUSE 框架创建一个 SFS 文件系统，这个文件系统采用 inode 方式管理文件系统
-- 类似于 UFS, 空闲块和空闲 inode 均采用位图的方式管理，文件数据块采用直接和间接索引的方式，支持多级目录。
-- 为了方便实现，文件名格式为 8.3，即文件名为 8 个字节，扩展名为 3 个字节。之后想办法实现长文件名。
+- 利用 libfuse 框架创建了一个类 UFS 文件系统，采用 inode 方式管理文件系统  
+- 空闲块和空闲 inode 均采用位图的方式管理，文件数据块采用直接和间接索引的方式，支持多级目录。
+- 文件和目录的增删改查均用了哈希表来进行, 比起常规的顺序存储, 效率更高  
+- 代码风格仿照c++的异常机制, 运行出错容易回溯  
+- 用了shell脚本安装依赖, 一行命令轻松安装依赖, 告别复杂的环境配置  
+- 写了CMakeList.txt, 用cmake生成makefile构建, 简单高效, 跨平台性强  
+- 使用gtest框架进行单元测试, 使代码鲁棒性比较强, 功能可靠  
 
 <br>
 
@@ -59,6 +60,7 @@ OS File System Based on libfuse.
 - test => 测试代码
 - CMakeLists.txt => CMake 配置文件
 - build.sh => 构建脚本
+- README.md => 说明文档  
 
 <br>
 
@@ -100,6 +102,8 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 ```
   
+<br>
+
 ### 设置disk地址
 需要修改`~/GanshinFUSE/include/config.h` 中的  
 ```c
@@ -136,6 +140,7 @@ make
 ```shell
 cd build/
 ```
+<br>
 
 ### 初始化
 
@@ -151,15 +156,44 @@ cd build/
 
 <br>
 
-### GanshinFS 启动
+### 新建挂载的文件夹
+新建要将文件系统挂载的文件夹, 任意位置文件夹都可  
+此处将文件夹建在build文件夹内  
 ```shell
-./GanshinFS
+cd build/
+mkdir mountdir
 ```
+
+<br>
+
+### 将文件系统挂载
+GanshinFS 启动  
+```shell
+# 默认文件系统在后台运行
+./GanshinFS ./mountdir
+
+# 强制文件系统在前台运行
+./GanshinFS -f ./mountdir
+
+# 将文件系统以调试模式运行
+./GanshinFS -d ./mountdir
+```
+
+<br>
+
+### 卸载文件系统
+```shell
+fusermount -u testmount
+```
+
+<br>
 
 ### 运行测试
 ```shell
 ./GanhsinTest
 ```
+
+<br>
 
 ## 调试工具
 LLDB
@@ -191,9 +225,8 @@ keeser
 
 - [x] 先搞明白制订开发计划
 - [x] 开发GanshinInit
-- [ ] 开发GanshinFS
+- [x] 开发GanshinFS
 - [x] 看能不能搞单元测试
-- [ ] 将所有的步骤写成脚本
 - [ ] 试着将写的GanshinFuse结合buildroot烧写在嵌入式板上
 - [ ] 测试通过后整理开源仓库
 - [ ] 写实验报告

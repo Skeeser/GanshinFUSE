@@ -22,8 +22,8 @@
 [简体中文](README_ZH.md) | [English](README_EN.md)
 
 OS File System Based on libfuse.  
-A UFS-like file system based on libfuse.  
-If you find it useful, please give it a star! :wink:​  
+A class UFS file system based on libfuse.  
+If you find it helpful, please give it a star :wink:​  
 
 
 <br>
@@ -33,28 +33,30 @@ If you find it useful, please give it a star! :wink:​
 <br>
 
 ## Features
-- Innovative use of shell scripts for dependency installation; one command for easy installation
-- Use cmake to generate makefile for building, simple and efficient, strong cross-platform capabilities
-- Use gtest for unit testing, making the code robust
-- Utilize FUSE framework to create an SFS file system managed by inodes
-- Similar to UFS, manages free blocks and free inodes using bitmaps; file data blocks are indexed directly and indirectly, supporting multi-level directories
-- For ease of implementation, file names follow the 8.3 format: 8 bytes for the file name and 3 bytes for the extension. Future work involves implementing long file names.
+- Created a UFS-like file system using the libfuse framework, managing the file system using inodes
+- Manage free blocks and free inodes using bitmaps, file data blocks using direct and indirect indexing, and support multi-level directories.
+- File and directory addition, deletion, modification, and search all utilize hash tables for higher efficiency compared to conventional sequential storage
+- Code style mimics C++ exception mechanisms, making error traceback easy
+- Used shell scripts to install dependencies, one command for easy installation of dependencies, farewell to complex environment configurations
+- Wrote CMakeList.txt, built with cmake to generate makefiles, simple and efficient, strong cross-platform compatibility
+- Utilized gtest framework for unit testing, resulting in stronger code robustness and reliable functionality
 
 <br>
 
 ## File Structure
 
-- doc => Contains development documents
+- doc => Stores development documents
   - develop_log.md => Development log
 - include => Header files
 - src => Source code
 - assets => Resource files
-- build => Compilation files
+- build => Compiled files
 - example => Stores example files
 - out => Stores disk files
 - test => Test code
 - CMakeLists.txt => CMake configuration file
 - build.sh => Build script
+- README.md => Documentation  
 
 <br>
 
@@ -83,7 +85,7 @@ git clone https://github.com/Skeeser/GanshinFUSE.git
 
 <br>
 
-### One-line build script
+### One-line script for building
 ```shell
 sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 ```
@@ -91,13 +93,15 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 <br>
 
 ### Create disk file
-8MB in size
+8MB size
 ```shell
 dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 ```
   
+<br>
+
 ### Set disk address
-Modify `~/GanshinFUSE/include/config.h`  
+Need to modify `~/GanshinFUSE/include/config.h`:
 ```c
 #define DISK_PATH "/home/keeser/GanshinFUSE/out/diskimg"
 ```
@@ -107,16 +111,16 @@ Set the absolute path to your disk
 
 ## Compilation
 ### Set debug or release version
-Modify in CMakeList.txt  
+Modify CMakeList.txt:
 ```c
 option(USE_DEBUG "Build with debug flags" ON)
 ```
-debug version--ON  
-release version--OFF  
+Debug version--ON  
+Release version--OFF  
 
 <br>
 
-### Execute compilation
+### Perform compilation
 ```shell
 cd ~/GanshinFUSE/
 mkdir build
@@ -127,11 +131,12 @@ make
 
 <br>
 
-## Running
+## Run
 ### In the build folder
 ```shell
 cd build/
 ```
+<br>
 
 ### Initialization
 
@@ -139,7 +144,7 @@ cd build/
 ./GanshinInit
 ```
 
-You should see the logo of this project
+You will see the logo of this project
 
 <div align="left" >
 <img alt="logo2" src="assets/logo2.png" />
@@ -147,32 +152,61 @@ You should see the logo of this project
 
 <br>
 
-### Start GanshinFS
+### Create a new mounting folder
+Create a folder to mount the file system, any folder in any location will do  
+Here, create the folder inside the build folder  
 ```shell
-./GanshinFS
+cd build/
+mkdir mountdir
 ```
+
+<br>
+
+### Mount the file system
+GanshinFS start  
+```shell
+# File system running in the background by default
+./GanshinFS ./mountdir
+
+# Force the file system to run in the foreground
+./GanshinFS -f ./mountdir
+
+# Run the file system in debug mode
+./GanshinFS -d ./mountdir
+```
+
+<br>
+
+### Unmount the file system
+```shell
+fusermount -u testmount
+```
+
+<br>
 
 ### Run tests
 ```shell
 ./GanhsinTest
 ```
 
-## Debugging Tool
+<br>
+
+## Debugging Tools
 LLDB
-For detailed usage, refer to [Development Documentation](doc/develop_log.md)
+For detailed usage, see [Development Document](doc/develop_log.md)
 
 <br>
 
 ## User Guide
-- Ensure all dependencies are installed
+- Check if the dependencies are installed
 
 <br>
 
 ## How to Contribute
-If you come across this project and wish to improve it, we highly recommend reading the following documents:
+If you've come across this project and want to improve it, strongly recommend reading the documents below:
 
-- [How to Participate in Open Source Projects with GitHub](doc/github参与开源项目流程.md)
-- [Development Documentation](doc/develop_log.md)
+- [How to participate in open source projects on Github](doc/github参与开源项目流程.md)
+- [Development Document](doc/develop_log.md)
 
 <br>
 
@@ -186,11 +220,10 @@ keeser
 
 - [x] Understand the development plan first
 - [x] Develop GanshinInit
-- [ ] Develop GanshinFS
-- [x] See if unit testing is feasible
-- [ ] Write all steps into scripts
-- [ ] Try integrating GanshinFuse with buildroot for burning on embedded boards
-- [ ] Organize the open-source repository after successful testing
+- [x] Develop GanshinFS
+- [x] See if unit testing can be done
+- [ ] Try to combine the written GanshinFuse with buildroot to burn it on an embedded board
+- [ ] After testing, organize the open source repository
 - [ ] Write the experiment report
 
 <br>
@@ -198,5 +231,3 @@ keeser
 ## License
 
 MPL 2.0
-
-

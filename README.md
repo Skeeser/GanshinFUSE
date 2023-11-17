@@ -22,13 +22,9 @@
 [简体中文](README_ZH.md) | [English](README_EN.md)
 
 OS File System Based on libfuse.  
-基于libfuse实现的类UFS文件系统  
-如果觉得不错的话, 麻烦点个star吧 :wink:​  
+A class UFS file system based on libfuse.  
+If you find it helpful, please give it a star :wink:​  
 
-
-<br>
-
-~~**要是 SCUTer 看见了, 都是一个班, 抄了很容易被老师认为抄袭哦**~~
 
 <br>
 
@@ -36,50 +32,52 @@ OS File System Based on libfuse.
 
 <br>
 
-## 功能特性
-- 开创性用了shell脚本安装依赖, 一行命令轻松安装依赖
-- 用cmake生成makefile构建, 简单高效, 跨平台性强
-- 使用gtest进行单元测试, 是代码鲁棒性比较强
-- 利用 FUSE 框架创建一个 SFS 文件系统，这个文件系统采用 inode 方式管理文件系统
-- 类似于 UFS, 空闲块和空闲 inode 均采用位图的方式管理，文件数据块采用直接和间接索引的方式，支持多级目录。
-- 为了方便实现，文件名格式为 8.3，即文件名为 8 个字节，扩展名为 3 个字节。之后想办法实现长文件名。
+## Features
+- Created a UFS-like file system using the libfuse framework, managing the file system using inodes
+- Manage free blocks and free inodes using bitmaps, file data blocks using direct and indirect indexing, and support multi-level directories.
+- File and directory addition, deletion, modification, and search all utilize hash tables for higher efficiency compared to conventional sequential storage
+- Code style mimics C++ exception mechanisms, making error traceback easy
+- Used shell scripts to install dependencies, one command for easy installation of dependencies, farewell to complex environment configurations
+- Wrote CMakeList.txt, built with cmake to generate makefiles, simple and efficient, strong cross-platform compatibility
+- Utilized gtest framework for unit testing, resulting in stronger code robustness and reliable functionality
 
 <br>
 
-## 文件结构
+## File Structure
 
-- doc => 存放开发文档
-  - develop_log.md => 开发日志
-- include => 头文件
-- src => 源代码
-- assets => 资源文件
-- build => 编译文件
-- example => 存放示例文件
-- out => 存放磁盘文件
-- test => 测试代码
-- CMakeLists.txt => CMake 配置文件
-- build.sh => 构建脚本
+- doc => Stores development documents
+  - develop_log.md => Development log
+- include => Header files
+- src => Source code
+- assets => Resource files
+- build => Compiled files
+- example => Stores example files
+- out => Stores disk files
+- test => Test code
+- CMakeLists.txt => CMake configuration file
+- build.sh => Build script
+- README.md => Documentation  
 
 <br>
 
-## 系统架构
+## System Architecture
 
 Linux
 
 <br>
 
 
-## 依赖检查
+## Dependency Check
 - cmake
 - gcc
 - libfuse
-- gtest (开发测试需要)
-- lldb (调试需要)
+- gtest (for development testing)
+- lldb (for debugging)
 
 <br>
 
-## 构建
-### 下载本项目
+## Build
+### Download this project
 ```shell
 cd ~
 git clone https://github.com/Skeeser/GanshinFUSE.git
@@ -87,42 +85,42 @@ git clone https://github.com/Skeeser/GanshinFUSE.git
 
 <br>
 
-### 脚本一行构建
+### One-line script for building
 ```shell
 sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 ```
 
 <br>
 
-### 创建disk文件
-8MB大小
+### Create disk file
+8MB size
 ```shell
 dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 ```
   
 <br>
 
-### 设置disk地址
-需要修改`~/GanshinFUSE/include/config.h` 中的  
+### Set disk address
+Need to modify `~/GanshinFUSE/include/config.h`:
 ```c
 #define DISK_PATH "/home/keeser/GanshinFUSE/out/diskimg"
 ```
-设置你的disk的绝对路径
+Set the absolute path to your disk
 
 <br>
 
-## 编译
-### 设置debug 或者 release版本
-修改CMakeList.txt中的  
+## Compilation
+### Set debug or release version
+Modify CMakeList.txt:
 ```c
 option(USE_DEBUG "Build with debug flags" ON)
 ```
-debug版本--ON  
-release版本--OFF  
+Debug version--ON  
+Release version--OFF  
 
 <br>
 
-### 执行编译
+### Perform compilation
 ```shell
 cd ~/GanshinFUSE/
 mkdir build
@@ -133,20 +131,20 @@ make
 
 <br>
 
-## 运行
-### 在build文件夹下
+## Run
+### In the build folder
 ```shell
 cd build/
 ```
 <br>
 
-### 初始化
+### Initialization
 
 ```shell
 ./GanshinInit
 ```
 
-能够看到本项目的logo
+You will see the logo of this project
 
 <div align="left" >
 <img alt="logo2" src="assets/logo2.png" />
@@ -154,9 +152,9 @@ cd build/
 
 <br>
 
-### 新建挂载的文件夹
-新建要将文件系统挂载的文件夹, 任意位置文件夹都可  
-此处将文件夹建在build文件夹内  
+### Create a new mounting folder
+Create a folder to mount the file system, any folder in any location will do  
+Here, create the folder inside the build folder  
 ```shell
 cd build/
 mkdir mountdir
@@ -164,56 +162,55 @@ mkdir mountdir
 
 <br>
 
-### 将文件系统挂载
-GanshinFS 启动  
+### Mount the file system
+GanshinFS start  
 ```shell
-# 默认文件系统在后台运行
+# File system running in the background by default
 ./GanshinFS ./mountdir
 
-# 强制文件系统在前台运行
+# Force the file system to run in the foreground
 ./GanshinFS -f ./mountdir
 
-# 将文件系统以调试模式运行
+# Run the file system in debug mode
 ./GanshinFS -d ./mountdir
 ```
 
 <br>
 
-### 卸载文件系统
+### Unmount the file system
 ```shell
 fusermount -u testmount
 ```
 
 <br>
 
-### 运行测试
+### Run tests
 ```shell
 ./GanhsinTest
 ```
 
 <br>
 
-## 调试工具
+## Debugging Tools
 LLDB
-详细使用见[开发文档](doc/develop_log.md)
+For detailed usage, see [Development Document](doc/develop_log.md)
 
 <br>
 
-## 使用指南
-- 注意依赖有没有装上
+## User Guide
+- Check if the dependencies are installed
 
 <br>
 
-## 如何贡献
-如果你见到了这个项目并且想要完善它  
-强烈建议阅读下面文档  
+## How to Contribute
+If you've come across this project and want to improve it, strongly recommend reading the documents below:
 
-- [如何用github参与开源项目](doc/github参与开源项目流程.md)
-- [开发文档](doc/develop_log.md)
+- [How to participate in open source projects on Github](doc/github参与开源项目流程.md)
+- [Development Document](doc/develop_log.md)
 
 <br>
 
-## 关于作者
+## About the Author
 
 keeser
 
@@ -221,16 +218,16 @@ keeser
 
 ## TODO
 
-- [x] 先搞明白制订开发计划
-- [x] 开发GanshinInit
-- [x] 开发GanshinFS
-- [x] 看能不能搞单元测试
-- [ ] 试着将写的GanshinFuse结合buildroot烧写在嵌入式板上
-- [ ] 测试通过后整理开源仓库
-- [ ] 写实验报告
+- [x] Understand the development plan first
+- [x] Develop GanshinInit
+- [x] Develop GanshinFS
+- [x] See if unit testing can be done
+- [ ] Try to combine the written GanshinFuse with buildroot to burn it on an embedded board
+- [ ] After testing, organize the open source repository
+- [ ] Write the experiment report
 
 <br>
 
-## 许可证
+## License
 
 MPL 2.0
