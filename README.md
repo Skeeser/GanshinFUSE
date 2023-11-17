@@ -154,9 +154,34 @@ cd build/
 
 <br>
 
-### GanshinFS 启动
+### 新建挂载的文件夹
+新建要将文件系统挂载的文件夹, 任意位置文件夹都可  
+此处将文件夹建在build文件夹内  
 ```shell
-./GanshinFS
+cd build/
+mkdir mountdir
+```
+
+<br>
+
+### 将文件系统挂载
+GanshinFS 启动  
+```shell
+# 默认文件系统在后台运行
+./GanshinFS ./mountdir
+
+# 强制文件系统在前台运行
+./GanshinFS -f ./mountdir
+
+# 将文件系统以调试模式运行
+./GanshinFS -d ./mountdir
+```
+
+<br>
+
+### 卸载文件系统
+```shell
+fusermount -u testmount
 ```
 
 <br>
@@ -198,9 +223,8 @@ keeser
 
 - [x] 先搞明白制订开发计划
 - [x] 开发GanshinInit
-- [ ] 开发GanshinFS
+- [x] 开发GanshinFS
 - [x] 看能不能搞单元测试
-- [ ] 将所有的步骤写成脚本
 - [ ] 试着将写的GanshinFuse结合buildroot烧写在嵌入式板上
 - [ ] 测试通过后整理开源仓库
 - [ ] 写实验报告
