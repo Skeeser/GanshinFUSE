@@ -683,12 +683,12 @@ int initInode(struct GInode *inode)
 {
 	int ret = 0;
 	// 为根目录的 struct GInode 对象赋值
-	inode->st_mode = 0755; // 权限，例如 rwxr-xr-x
-	inode->st_ino = 0;	   // i-node号为0
-	inode->st_nlink = 1;   // 连接数，通常为1
-	inode->st_uid = 0;	   // 根目录的用户 ID，通常为0（超级用户）
-	inode->st_gid = 0;	   // 根目录的组 ID，通常为0（超级用户组）
-	inode->st_size = 0;	   // 文件大小，为4KB
+	inode->st_mode = __S_IFREG | 0755; // 权限，例如 rwxr-xr-x
+	inode->st_ino = 0;				   // i-node号为0
+	inode->st_nlink = 1;			   // 连接数，通常为1
+	inode->st_uid = 0;				   // 根目录的用户 ID，通常为0（超级用户）
+	inode->st_gid = 0;				   // 根目录的组 ID，通常为0（超级用户组）
+	inode->st_size = 0;				   // 文件大小，为4KB
 	time_t currentTime;
 	currentTime = time(NULL); // 获取当前时间
 
@@ -2263,7 +2263,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		goto error;
 	}
 	// 增加inode的文件大小
-	temp_inode->st_size += size;
+	temp_inode->st_size = offset + size;
 
 	int cur_num = 0;
 
@@ -2283,13 +2283,13 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 				if (write_size <= 0)
 					write_size = 0;
 
-				memcpy(temp_data_blk->data, buf, write_size);
+				memcpy(temp_data_blk->data + data_offset, buf, write_size);
 
 				data_offset = 0;
 				// 更新已经写过的字节数
 				already_write_size += write_size;
-				// 更新data blk的大小
-				temp_data_blk->size += write_size;
+				// 更新data blk的大小, 覆盖式写入
+				temp_data_blk->size = data_offset + write_size;
 				//  将data_blk写进文件
 				writeDataByBlkId(*addr, temp_data_blk);
 
@@ -2326,13 +2326,13 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 					if (write_size <= 0)
 						write_size = 0;
 
-					memcpy(first_data_blk->data, buf, write_size);
+					memcpy(first_data_blk->data + data_offset, buf, write_size);
 
 					data_offset = 0;
 					// 更新已经写过的字节数
 					already_write_size += write_size;
 					// 更新data blk的大小
-					first_data_blk->size += write_size;
+					first_data_blk->size = data_offset + write_size;
 					//  将data_blk写进文件
 					writeDataByBlkId(first_addr, first_data_blk);
 
@@ -2375,13 +2375,13 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 						if (write_size <= 0)
 							write_size = 0;
 
-						memcpy(first_data_blk->data, buf, write_size);
+						memcpy(first_data_blk->data + data_offset, buf, write_size);
 
 						data_offset = 0;
 						// 更新已经写过的字节数
 						already_write_size += write_size;
 						// 更新data blk的大小
-						first_data_blk->size += write_size;
+						first_data_blk->size = data_offset + write_size;
 						//  将data_blk写进文件
 						writeDataByBlkId(first_addr, first_data_blk);
 
@@ -2430,13 +2430,13 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 							if (write_size <= 0)
 								write_size = 0;
 
-							memcpy(first_data_blk->data, buf, write_size);
+							memcpy(first_data_blk->data + data_offset, buf, write_size);
 
 							data_offset = 0;
 							// 更新已经写过的字节数
 							already_write_size += write_size;
 							// 更新data blk的大小
-							first_data_blk->size += write_size;
+							first_data_blk->size = data_offset + write_size;
 							//  将data_blk写进文件
 							writeDataByBlkId(first_addr, first_data_blk);
 
@@ -2460,7 +2460,10 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 
 	printSuccess("writeFileDataByInodeId: success");
 error:
-	temp_inode->st_mode = __S_IFREG | 0755;
+	temp_inode->st_mode = (__S_IFREG | 0755);
+	temp_inode->st_nlink = 1;
+	temp_inode->st_ino = inode_id;
+	// temp_inode->st_mode = 33261;
 	// 更新inode
 	writeInodeByInodeId(inode_id, temp_inode);
 

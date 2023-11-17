@@ -118,7 +118,7 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 {
 	(void)fi;
 	int ret = size;
-
+	char *tmp_buf = strdup(buf);
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 
 	// 根据路径读取file_dir
@@ -139,9 +139,14 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 
 	const long file_inode_id = file_dir->nInodeBlock;
 
+	// 处理末尾的'\n'
+
+	// if (tmp_buf[size - 1] == '\n')
+	// 	tmp_buf[size - 1] = '\0';
+
 	// 根据inode_id来写入文件
 	// 根据文件信息读取文件内容
-	if ((ret = writeFileDataByInodeId(file_inode_id, size, offset, buf)) != 0)
+	if ((writeFileDataByInodeId(file_inode_id, size, offset, tmp_buf)) != 0)
 	{
 		printf("GFS_write: write file failed!");
 		goto error;
@@ -149,6 +154,7 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 
 	printSuccess("GFS_write: write file success!");
 error:
+	free(tmp_buf);
 	free(file_dir);
 	return ret;
 }
