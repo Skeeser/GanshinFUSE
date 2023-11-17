@@ -18,7 +18,7 @@ static const struct fuse_operations GFS_oper = {
     .release = GFS_release, // 和open相对，关闭文件
     .mkdir = GFS_mkdir,     // 创建目录
     .rmdir = GFS_rmdir,     // 删除目录
-    // .access		= MFS_access,// 进入目录
+    .access = GFS_access,   // 进入目录
     // .readdir	= MFS_readdir,  // 读取目录
 };
 

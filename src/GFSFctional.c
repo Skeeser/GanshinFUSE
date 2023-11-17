@@ -166,3 +166,11 @@ int GFS_rmdir(const char *path)
 {
 	return removeFileByPath(path, GDIRECTORY);
 }
+
+// 此函数用来进入目录
+int GFS_access(const char *path, int flag)
+{
+	(void)path;
+	(void)flag;
+	return 0;
+}
