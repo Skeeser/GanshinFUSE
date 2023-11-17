@@ -114,6 +114,18 @@ TEST(GFS, readFile)
     free(read_data);
 }
 
+TEST(GFS, createDir)
+{
+    int ret = GFS_mkdir("/test_dir/", (mode_t)NULL);
+    ASSERT_EQ(ret, 0);
+    struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+    ret = getFileDirByPath("/test_dir/", fd);
+    ASSERT_STRCASEEQ(fd->fname, "test_dir");
+    ASSERT_STRCASEEQ(fd->fext, "");
+    // ASSERT_EQ(fd->fsize, 0);
+    free(fd);
+}
+
 int main(int argc, char *argv[])
 {
     testing::InitGoogleTest(&argc, argv);
