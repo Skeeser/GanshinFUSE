@@ -842,6 +842,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_mode = file_mode;
 		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
@@ -874,6 +875,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_mode = file_mode;
 		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
@@ -909,6 +911,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_mode = file_mode;
 		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
@@ -946,6 +949,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_mode = file_mode;
 		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
@@ -2413,6 +2417,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 
 	printSuccess("writeFileDataByInodeId: success");
 error:
+	temp_inode->st_mode = __S_IFREG | 0755;
 	// 更新inode
 	writeInodeByInodeId(inode_id, temp_inode);
 

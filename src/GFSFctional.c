@@ -11,8 +11,8 @@ Github: https://github.com/Skeeser/GanshinFUSE
 void *GFS_init(struct fuse_conn_info *conn, struct fuse_config *cfg)
 {
 	printSuccess("GanshinFS init start!");
-	// (void)conn;
-	// (void)cfg;
+	(void)conn;
+	(void)cfg;
 	// 在此处存放初始化的操作
 
 	printSuccess("GanshinFS init finished!");
@@ -22,7 +22,7 @@ void *GFS_init(struct fuse_conn_info *conn, struct fuse_config *cfg)
 // 这个函数用于读取文件属性, 通过对象的路径获取文件的属性, 并赋值给stbuf
 int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 {
-	// (void)fi;
+	(void)fi;
 	int res = 0;
 	struct GInode *file_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	short int inode_id = -1;
@@ -45,8 +45,8 @@ int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 // 此函数用来创建文件
 int GFS_mknod(const char *path, mode_t mode, dev_t dev)
 {
-	mode = (mode_t)0;
-	dev = (dev_t)0;
+	(void)mode;
+	(void)dev;
 	return createFileByPath(path, GFILE);
 }
 
@@ -59,16 +59,16 @@ int GFS_unlink(const char *path)
 // 此函数用来打开文件
 int GFS_open(const char *path, struct fuse_file_info *fi)
 {
-	// (void)fi;
-	// (void)path;
+	(void)fi;
+	(void)path;
 	return 0;
 }
 
 // 此函数用来读取文件内容
 int GFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-	// (void)fi;
-	int ret = 0;
+	(void)fi;
+	int ret = size;
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 	// struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
 
@@ -108,15 +108,15 @@ error:
 // 此函数用来关闭文件
 int GFS_release(const char *path, struct fuse_file_info *fi)
 {
-	// (void)fi;
-	// (void)path;
+	(void)fi;
+	(void)path;
 	return 0;
 }
 
 // 此函数用来写入文件, 注意offset是数据块内的偏移, 而不是buf的偏移
 int GFS_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-	// (void)fi;
+	(void)fi;
 	int ret = size;
 
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
@@ -156,7 +156,7 @@ error:
 // 此函数用来创建目录
 int GFS_mkdir(const char *path, mode_t mode)
 {
-	// (void)mode;
+	(void)mode;
 	return createFileByPath(path, GDIRECTORY);
 }
 
@@ -169,8 +169,8 @@ int GFS_rmdir(const char *path)
 // 此函数用来进入目录
 int GFS_access(const char *path, int flag)
 {
-	// (void)path;
-	// (void)flag;
+	(void)path;
+	(void)flag;
 	return 0;
 }
 
@@ -205,12 +205,12 @@ int GFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	filler(buf, "..", NULL, 0, 0);
 
 	// 遍历所有的file dir并加进buf中
-	// if ((ret = iterFileDirByInodeId(inode_id, buf, filler)) != 0)
-	// {
-	// 	printError("GFS_readdir: iterFileDir failed1");
-	// 	ret = -ENOENT;
-	// 	goto error;
-	// }
+	if ((ret = iterFileDirByInodeId(inode_id, buf, filler)) != 0)
+	{
+		printError("GFS_readdir: iterFileDir failed1");
+		ret = -ENOENT;
+		goto error;
+	}
 
 error:
 	free(file_dir);
