@@ -683,12 +683,12 @@ int initInode(struct GInode *inode)
 {
 	int ret = 0;
 	// 为根目录的 struct GInode 对象赋值
-	inode->st_mode = 0755;		// 权限，例如 rwxr-xr-x
-	inode->st_ino = 0;			// i-node号为0
-	inode->st_nlink = 1;		// 连接数，通常为1
-	inode->st_uid = 0;			// 根目录的用户 ID，通常为0（超级用户）
-	inode->st_gid = 0;			// 根目录的组 ID，通常为0（超级用户组）
-	inode->st_size = FILE_SIZE; // 文件大小，为4KB
+	inode->st_mode = 0755; // 权限，例如 rwxr-xr-x
+	inode->st_ino = 0;	   // i-node号为0
+	inode->st_nlink = 1;   // 连接数，通常为1
+	inode->st_uid = 0;	   // 根目录的用户 ID，通常为0（超级用户）
+	inode->st_gid = 0;	   // 根目录的组 ID，通常为0（超级用户组）
+	inode->st_size = 0;	   // 文件大小，为4KB
 	time_t currentTime;
 	currentTime = time(NULL); // 获取当前时间
 
@@ -809,6 +809,16 @@ int rmUpdateMenuInode(const short int cur_i, struct GInode *menu_inode)
 int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_filedir)
 {
 	int ret = 0;
+	mode_t file_mode = 0755;
+	// 获取文件权限
+	if (p_filedir->flag == (int)GDIRECTORY)
+	{
+		file_mode |= __S_IFDIR;
+	}
+	else if (p_filedir->flag == (int)GFILE)
+	{
+		file_mode |= __S_IFREG;
+	}
 
 	struct GInode *menu_inode = (struct GInode *)malloc(sizeof(struct GInode));
 	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
@@ -832,6 +842,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
 
@@ -863,6 +874,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
 
@@ -897,6 +909,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
 
@@ -933,6 +946,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getFreeInodeBlk(1, &temp_free_inode);
 		// 初始化新的inode
 		initInode(temp_inode);
+		temp_inode->st_ino = temp_free_inode;
 		// 将新inode写进文件
 		writeInodeByInodeId(temp_free_inode, temp_inode);
 
