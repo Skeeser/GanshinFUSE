@@ -153,3 +153,10 @@ error:
 	free(file_dir);
 	return ret;
 }
+
+// 此函数用来创建目录
+int GFS_mkdir(const char *path, mode_t mode)
+{
+	(void)mode;
+	return createFileByPath(path, GDIRECTORY);
+}
