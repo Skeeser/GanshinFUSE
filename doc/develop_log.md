@@ -28,7 +28,7 @@
 cd ~/libfuse/build/example
 mkdir testmount
 ls -al testmount
-./hello testmount
+./hello -f testmount
 ls -al testmount
 cat testmount/hello
 ```
@@ -217,6 +217,9 @@ i节点, 根目录指向data区的一个块地址
 Q: str的memcpy, 字符串不对?  
 A: 注意len()要加一, 把'\0'也复制  
 --- 
+Q: 挂载后出现"由软件导致的连接断开"
+A:  
+
 
 <br>
 

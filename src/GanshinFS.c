@@ -27,9 +27,13 @@ int main(int argc, char *argv[])
     // 打印LOGO
     printf("%s", LOGO);
 
+    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+
     // 给出最大权限
     umask(0);
+    int ret = fuse_main(args.argc, args.argv, &GFS_oper, NULL);
+    fuse_opt_free_args(&args);
 
     // 返回时调用fuse的main函数
-    return fuse_main(argc, argv, &GFS_oper, NULL);
+    return ret;
 }
