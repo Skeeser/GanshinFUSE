@@ -80,11 +80,6 @@ TEST(FILE, removeFile)
     struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
     ret = getFileDirByPath("/test.jpg", fd);
     ASSERT_EQ(ret, -1);
-    struct GSuperBlock *sp_blk;
-    sp_blk = (struct GSuperBlock *)malloc(sizeof(struct GSuperBlock));
-    getSuperBlock(sp_blk);
-    free(sp_blk);
-    free(fd);
 }
 
 TEST(GFS, writeFile)
@@ -124,6 +119,16 @@ TEST(GFS, createDir)
     ASSERT_STRCASEEQ(fd->fext, "");
     // ASSERT_EQ(fd->fsize, 0);
     free(fd);
+}
+
+TEST(GFS, removeDir)
+{
+    int ret = GFS_rmdir("/test_dir/");
+    ASSERT_EQ(ret, 0);
+
+    struct GFileDir *fd = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+    ret = getFileDirByPath("/test_dir/", fd);
+    ASSERT_EQ(ret, -1);
 }
 
 int main(int argc, char *argv[])
