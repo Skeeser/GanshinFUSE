@@ -1522,7 +1522,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 			getDataByBlkId(addr, temp_data_blk);
 			const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
 			int fd_cur_blk = 0;
-			for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+			for (int i = 0; i < MAX_DATA_IN_BLOCK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
 			{
 				memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
 				// 检查是否有内容, 默认全部为-1
@@ -1553,7 +1553,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 	{
 		// 获取menu地址指向的一次间接块
 		getDataByBlkId(first_Indir, first_data_blk);
-		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 		{
 			const short int addr = retShortIntFromData(first_data_blk->data, i);
 			if (addr >= 0)
@@ -1562,7 +1562,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 				getDataByBlkId(addr, temp_data_blk);
 				const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
 				int fd_cur_blk = 0;
-				for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+				for (int i = 0; i < MAX_DATA_IN_BLOCK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
 				{
 					memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
 					// 检查是否有内容, 默认全部为-1
@@ -1592,13 +1592,13 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 	if (second_Indir >= 0)
 	{
 		getDataByBlkId(second_Indir, second_data_blk);
-		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 		{
 			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
 			if (first_Indir >= 0)
 			{
 				getDataByBlkId(first_Indir, first_data_blk);
-				for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+				for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 				{
 					const short int addr = retShortIntFromData(first_data_blk->data, i);
 					if (addr >= 0)
@@ -1607,7 +1607,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 						getDataByBlkId(addr, temp_data_blk);
 						const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
 						int fd_cur_blk = 0;
-						for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+						for (int i = 0; i < MAX_DATA_IN_BLOCK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
 						{
 							memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
 							// 检查是否有内容, 默认全部为-1
@@ -1639,29 +1639,30 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 	if (third_Indir >= 0)
 	{
 		getDataByBlkId(third_Indir, third_data_blk);
-		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 		{
 			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
 			if (second_Indir > 0)
 			{
 				getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
-				for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+				for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 				{
 					const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
 					if (first_Indir > 0)
 					{
 
 						getDataByBlkId(first_Indir, first_data_blk);
-						for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+						for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 						{
 							const short int addr = retShortIntFromData(first_data_blk->data, i);
+
 							if (addr >= 0)
 							{
 								// 拿到menu地址指向的数据块
 								getDataByBlkId(addr, temp_data_blk);
 								const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
 								int fd_cur_blk = 0;
-								for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+								for (int i = 0; i < MAX_DATA_IN_BLOCK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
 								{
 									memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
 									// 检查是否有内容, 默认全部为-1
