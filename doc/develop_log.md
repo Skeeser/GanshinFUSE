@@ -234,4 +234,5 @@ bitmap初始化问题
 写一个判断该块是否free的函数  
 根目录的st_size不太对  
 removeFileByPath把超级块给弄成0了
-写入文件或者读取不全
+写入文件或者读取不全  
+writeFileDataByInodeId按照size来遍历, 但是之前已经初始化为零了, 不会写不进去吗?  

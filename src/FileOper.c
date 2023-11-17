@@ -1189,7 +1189,7 @@ void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, 
 	memcpy(p_fd, &(data_blk->data[offset]), sizeof(struct GFileDir));
 }
 
-// 根据inode, 获取该文件占据了多少块
+// 根据inode, 获取该文件占据了多少块  (已弃用)
 void getFileBlkNum(struct GInode *inode, int *blk_num)
 {
 	if (inode == NULL)
@@ -1468,33 +1468,207 @@ int initFileDir(struct GFileDir *file_dir)
 int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t filler)
 {
 	int ret = 0;
-	struct GInode *inode = (struct GInode *)malloc(sizeof(struct GInode));
-	// 根据inode_id, 读出数据内容
-	if (getInodeByInodeId(inode_id, inode) != 0)
+
+	char *cur_buf_pointer = buf;
+	long already_read_size = 0;
+	const int start_data_bitmap = SUPER_BLOCK + INODE_BITMAP;
+
+	struct GInode *temp_inode = (struct GInode *)malloc(sizeof(struct GInode));
+	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
+	// int ADDR_PER_BLK = MAX_DATA_IN_BLOCK / sizeof(short int);
+	struct GDataBlock *temp_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *first_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *second_data_blk = malloc(sizeof(struct GDataBlock));
+	struct GDataBlock *third_data_blk = malloc(sizeof(struct GDataBlock));
+
+	char name[MAX_FILENAME + MAX_EXTENSION + 2];
+	if (getInodeByInodeId(inode_id, temp_inode) != 0)
 	{
-		printError("GFS_readdir: getInodeByInodeId failed!");
 		ret = -ENOENT;
 		goto error;
 	}
-	// 按顺序查找,并向buf添加目录内的文件和目录名
-	int pos = 0;
-	char name[MAX_FILENAME + MAX_EXTENSION + 2]; // 2是因为文件名和扩展名都有nul字符
-	while (pos < data_blk->size)
+
+	// 将原有占了bitmap的块置0
+	// 默认文件是顺序存储, 遍历
+	const int fd_num = temp_inode->st_size / sizeof(struct GFileDir);
+	int cur_num = 0;
+
+	// 直接地址
+	for (int i = 0; i < 4; i++)
 	{
-		strcpy(name, file_dir->fname);
-		if (strlen(file_dir->fext) != 0)
+		// menu的地址
+		const short int addr = temp_inode->addr[i];
+		if (addr >= 0)
 		{
-			strcat(name, ".");
-			strcat(name, file_dir->fext);
+			// 拿到menu地址指向的数据块
+			getDataByBlkId(addr, temp_data_blk);
+			const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
+			int fd_cur_blk = 0;
+			for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+			{
+				memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
+				// 检查是否有内容, 默认全部为-1
+				if (file_dir->fext[0] != -1)
+				{
+					cur_num++;
+					fd_cur_blk++;
+					strcpy(name, file_dir->fname);
+					if (strlen(file_dir->fext) != 0)
+					{
+						strcat(name, ".");
+						strcat(name, file_dir->fext);
+					}
+					// 将文件名添加到buf里
+					filler(buf, name, NULL, 0, 0);
+					// 如果找到了所有的file dir, 结束
+					if (cur_num == fd_num)
+						goto error;
+				}
+			}
 		}
-		if (file_dir->flag != 0 && name[strlen(name) - 1] != '~' && filler(buf, name, NULL, 0, 0)) // 将文件名添加到buf里面
-			break;
-		file_dir++;
-		pos += sizeof(struct file_directory);
+	}
+
+	// 一次间接
+	// menu的地址
+	const short int first_Indir = temp_inode->addr[4];
+	if (first_Indir >= 0)
+	{
+		// 获取menu地址指向的一次间接块
+		getDataByBlkId(first_Indir, first_data_blk);
+		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		{
+			const short int addr = retShortIntFromData(first_data_blk->data, i);
+			if (addr >= 0)
+			{
+				// 拿到menu地址指向的数据块
+				getDataByBlkId(addr, temp_data_blk);
+				const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
+				int fd_cur_blk = 0;
+				for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+				{
+					memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
+					// 检查是否有内容, 默认全部为-1
+					if (file_dir->fext[0] != -1)
+					{
+						cur_num++;
+						fd_cur_blk++;
+						strcpy(name, file_dir->fname);
+						if (strlen(file_dir->fext) != 0)
+						{
+							strcat(name, ".");
+							strcat(name, file_dir->fext);
+						}
+						// 将文件名添加到buf里
+						filler(buf, name, NULL, 0, 0);
+						// 如果找到了所有的file dir, 结束
+						if (cur_num == fd_num)
+							goto error;
+					}
+				}
+			}
+		}
+	}
+
+	// 二次间接
+	const short int second_Indir = temp_inode->addr[5];
+	if (second_Indir >= 0)
+	{
+		getDataByBlkId(second_Indir, second_data_blk);
+		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		{
+			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+			getDataByBlkId(first_Indir, first_data_blk);
+			for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+			{
+				const short int addr = retShortIntFromData(first_data_blk->data, i);
+				if (addr >= 0)
+				{
+					// 拿到menu地址指向的数据块
+					getDataByBlkId(addr, temp_data_blk);
+					const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
+					int fd_cur_blk = 0;
+					for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+					{
+						memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
+						// 检查是否有内容, 默认全部为-1
+						if (file_dir->fext[0] != -1)
+						{
+							cur_num++;
+							fd_cur_blk++;
+							strcpy(name, file_dir->fname);
+							if (strlen(file_dir->fext) != 0)
+							{
+								strcat(name, ".");
+								strcat(name, file_dir->fext);
+							}
+							// 将文件名添加到buf里
+							filler(buf, name, NULL, 0, 0);
+							// 如果找到了所有的file dir, 结束
+							if (cur_num == fd_num)
+								goto error;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 三次间接
+	short int third_Indir = temp_inode->addr[6];
+	if (third_Indir >= 0)
+	{
+		getDataByBlkId(third_Indir, third_data_blk);
+		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		{
+			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
+			getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
+			for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+			{
+				const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+				getDataByBlkId(first_Indir, first_data_blk);
+				for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+				{
+					const short int addr = retShortIntFromData(first_data_blk->data, i);
+					if (addr >= 0)
+					{
+						// 拿到menu地址指向的数据块
+						getDataByBlkId(addr, temp_data_blk);
+						const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
+						int fd_cur_blk = 0;
+						for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+						{
+							memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
+							// 检查是否有内容, 默认全部为-1
+							if (file_dir->fext[0] != -1)
+							{
+								cur_num++;
+								fd_cur_blk++;
+								strcpy(name, file_dir->fname);
+								if (strlen(file_dir->fext) != 0)
+								{
+									strcat(name, ".");
+									strcat(name, file_dir->fext);
+								}
+								// 将文件名添加到buf里
+								filler(buf, name, NULL, 0, 0);
+								// 如果找到了所有的file dir, 结束
+								if (cur_num == fd_num)
+									goto error;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 error:
-	free(inode);
+	free(first_data_blk);
+	free(second_data_blk);
+	free(third_data_blk);
+	free(temp_data_blk);
+	free(file_dir);
+	free(temp_inode);
 	return ret;
 }
 // 根据路径新建文件
