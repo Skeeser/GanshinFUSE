@@ -23,6 +23,7 @@ int writeDataByBlkId(const short int blk_id, const struct GDataBlock *data_blk);
 int getFreeDataBlk(const int need_num, short int *start_blk);
 void getAddrDataDirectIndex(short int *addr, struct GDataBlock *data_blk);
 void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlock *data_blk);
+void getAddrDataFinalIndex(short int *addr, const int offset, struct GDataBlock *data_blk);
 void initShortIntToData(char *data);
 int writeShortIntToData(const short int addr, const int offset, char *data);
 int removeFileDataByInodeId(const short int inode_id);

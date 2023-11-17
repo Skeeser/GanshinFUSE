@@ -766,6 +766,38 @@ void getAddrDataIndirectIndex(short int *addr, const int offset, struct GDataBlo
 	}
 }
 
+// 最后写入的addr和data
+void getAddrDataFinalIndex(short int *addr, const int offset, struct GDataBlock *data_blk)
+{
+	const short int old_addr = *addr;
+	const short int new_addr = retShortIntFromData(data_blk->data, offset);
+	if (new_addr < 0 || checkBitmapUsed((SUPER_BLOCK + INODE_BITMAP), new_addr) == 0) // 地址未被创建
+	{
+		// 赋值原来的addr
+		// short int old_addr = *addr;
+		// 根据data bitmap, 找到空闲块
+		*addr = -1;
+		getFreeDataBlk(1, addr);
+		// 将获得的addr写入原来的位置
+		writeShortIntToData(*addr, offset, data_blk->data);
+		data_blk->size += sizeof(short int);
+		// 将data写进文件
+		writeDataByBlkId(old_addr, data_blk);
+		// 将该数据块的GDataBlock中的size全部初始化为0
+		getDataByBlkId(*addr, data_blk);
+		data_blk->size = 0;
+		// 将data中的short int 置-1, 可能init到了存储file dir的块
+		memset(data_blk->data, -1, MAX_DATA_IN_BLOCK);
+		// 将data_block写进文件
+		writeDataByBlkId(*addr, data_blk);
+	}
+	else // 地址已被创建
+	{
+		getDataByBlkId(*addr, data_blk);
+		// getFileDirFromDataBlk(data_blk, offset, p_filedir);
+	}
+}
+
 // 因为写进了file dir, 更新menu的inode
 int updateMenuInode(const short int cur_i, struct GInode *menu_inode)
 {
@@ -864,7 +896,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		// 下面不能传入addr,要不然会把菜单的addr给改了
 		short int indir_addr = *addr;
 		int offset = (((hash_num - FD_ZEROTH_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
-		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
+		getAddrDataFinalIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 更新menu inode
@@ -900,7 +932,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (((hash_num - FD_FIRST_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
-		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
+		getAddrDataFinalIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 更新menu inode
@@ -938,7 +970,7 @@ int createFileDirByHash(const int hash_num, const int cur_i, struct GFileDir *p_
 		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
 
 		offset = (((hash_num - FD_SECOND_INDIR) / FD_PER_BLK) % ADDR_PER_BLK) * sizeof(short int);
-		getAddrDataIndirectIndex(&indir_addr, offset, data_blk);
+		getAddrDataFinalIndex(&indir_addr, offset, data_blk);
 
 		offset = (hash_num % FD_PER_BLK) * sizeof(struct GFileDir);
 		// 更新menu inode
@@ -1516,7 +1548,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 	{
 		// menu的地址
 		const short int addr = temp_inode->addr[i];
-		if (addr >= 0)
+		if (addr > 0)
 		{
 			// 拿到menu地址指向的数据块
 			getDataByBlkId(addr, temp_data_blk);
@@ -1549,14 +1581,14 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 	// 一次间接
 	// menu的地址
 	const short int first_Indir = temp_inode->addr[4];
-	if (first_Indir >= 0)
+	if (first_Indir > 0)
 	{
 		// 获取menu地址指向的一次间接块
 		getDataByBlkId(first_Indir, first_data_blk);
 		for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 		{
 			const short int addr = retShortIntFromData(first_data_blk->data, i);
-			if (addr >= 0)
+			if (addr > 0)
 			{
 				// 拿到menu地址指向的数据块
 				getDataByBlkId(addr, temp_data_blk);
@@ -1589,19 +1621,19 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 
 	// 二次间接
 	const short int second_Indir = temp_inode->addr[5];
-	if (second_Indir >= 0)
+	if (second_Indir > 0)
 	{
 		getDataByBlkId(second_Indir, second_data_blk);
 		for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 		{
 			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
-			if (first_Indir >= 0)
+			if (first_Indir > 0)
 			{
 				getDataByBlkId(first_Indir, first_data_blk);
 				for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
 				{
 					const short int addr = retShortIntFromData(first_data_blk->data, i);
-					if (addr >= 0)
+					if (addr > 0)
 					{
 						// 拿到menu地址指向的数据块
 						getDataByBlkId(addr, temp_data_blk);
@@ -1636,7 +1668,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 
 	// 三次间接
 	short int third_Indir = temp_inode->addr[6];
-	if (third_Indir >= 0)
+	if (third_Indir > 0)
 	{
 		getDataByBlkId(third_Indir, third_data_blk);
 		for (int i = 0; i < MAX_DATA_IN_BLOCK; i += sizeof(short int))
@@ -1656,7 +1688,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 						{
 							const short int addr = retShortIntFromData(first_data_blk->data, i);
 
-							if (addr >= 0)
+							if (addr > 0)
 							{
 								// 拿到menu地址指向的数据块
 								getDataByBlkId(addr, temp_data_blk);
@@ -1666,7 +1698,7 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 								{
 									memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
 									// 检查是否有内容, 默认全部为-1
-									if (file_dir->fext[0] != -1)
+									if (file_dir->flag == 1 || file_dir->flag == 2)
 									{
 										cur_num++;
 										fd_cur_blk++;
@@ -2284,7 +2316,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 		for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
 		{
 			short int first_addr = *second_addr;
-			getAddrDataIndirectIndex(&first_addr, i, first_data_blk);
+			getAddrDataFinalIndex(&first_addr, i, first_data_blk);
 			if (first_addr >= 0)
 			{
 				if (cur_num >= blk_offset)
@@ -2333,7 +2365,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 			for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
 			{
 				short int first_addr = second_addr;
-				getAddrDataIndirectIndex(&first_addr, i, first_data_blk);
+				getAddrDataFinalIndex(&first_addr, i, first_data_blk);
 				if (first_addr >= 0)
 				{
 					if (cur_num >= blk_offset)
@@ -2388,7 +2420,7 @@ int writeFileDataByInodeId(const short int inode_id, const unsigned long size, c
 				for (int i = 0; i < second_data_blk->size; i += sizeof(short int))
 				{
 					short int first_addr = second_addr;
-					getAddrDataIndirectIndex(&first_addr, i, first_data_blk);
+					getAddrDataFinalIndex(&first_addr, i, first_data_blk);
 					if (first_addr >= 0)
 					{
 						if (cur_num >= blk_offset)

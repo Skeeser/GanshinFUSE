@@ -216,3 +216,10 @@ error:
 	free(file_dir);
 	return ret;
 }
+
+int GFS_utimes(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)
+{
+	(void)path;
+	(void)fi;
+	return 0;
+}
