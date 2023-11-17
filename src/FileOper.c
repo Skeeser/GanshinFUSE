@@ -1595,54 +1595,8 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
 		{
 			const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
-			getDataByBlkId(first_Indir, first_data_blk);
-			for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+			if (first_Indir >= 0)
 			{
-				const short int addr = retShortIntFromData(first_data_blk->data, i);
-				if (addr >= 0)
-				{
-					// 拿到menu地址指向的数据块
-					getDataByBlkId(addr, temp_data_blk);
-					const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
-					int fd_cur_blk = 0;
-					for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
-					{
-						memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
-						// 检查是否有内容, 默认全部为-1
-						if (file_dir->fext[0] != -1)
-						{
-							cur_num++;
-							fd_cur_blk++;
-							strcpy(name, file_dir->fname);
-							if (strlen(file_dir->fext) != 0)
-							{
-								strcat(name, ".");
-								strcat(name, file_dir->fext);
-							}
-							// 将文件名添加到buf里
-							filler(buf, name, NULL, 0, 0);
-							// 如果找到了所有的file dir, 结束
-							if (cur_num == fd_num)
-								goto error;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// 三次间接
-	short int third_Indir = temp_inode->addr[6];
-	if (third_Indir >= 0)
-	{
-		getDataByBlkId(third_Indir, third_data_blk);
-		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
-		{
-			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
-			getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
-			for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
-			{
-				const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
 				getDataByBlkId(first_Indir, first_data_blk);
 				for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
 				{
@@ -1672,6 +1626,62 @@ int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t fi
 								// 如果找到了所有的file dir, 结束
 								if (cur_num == fd_num)
 									goto error;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 三次间接
+	short int third_Indir = temp_inode->addr[6];
+	if (third_Indir >= 0)
+	{
+		getDataByBlkId(third_Indir, third_data_blk);
+		for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+		{
+			const short int second_Indir = retShortIntFromData(third_data_blk->data, i);
+			if (second_Indir > 0)
+			{
+				getDataByBlkId(retShortIntFromData(third_data_blk->data, i), second_data_blk);
+				for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+				{
+					const short int first_Indir = retShortIntFromData(second_data_blk->data, i);
+					if (first_Indir > 0)
+					{
+
+						getDataByBlkId(first_Indir, first_data_blk);
+						for (int i = 0; i < ADDR_PER_BLK; i += sizeof(short int))
+						{
+							const short int addr = retShortIntFromData(first_data_blk->data, i);
+							if (addr >= 0)
+							{
+								// 拿到menu地址指向的数据块
+								getDataByBlkId(addr, temp_data_blk);
+								const int fd_this_blk = temp_data_blk->size / sizeof(struct GFileDir);
+								int fd_cur_blk = 0;
+								for (int i = 0; i < FD_PER_BLK, fd_cur_blk < fd_this_blk; i += sizeof(struct GFileDir))
+								{
+									memcpy(file_dir, temp_data_blk->data + i, sizeof(struct GFileDir));
+									// 检查是否有内容, 默认全部为-1
+									if (file_dir->fext[0] != -1)
+									{
+										cur_num++;
+										fd_cur_blk++;
+										strcpy(name, file_dir->fname);
+										if (strlen(file_dir->fext) != 0)
+										{
+											strcat(name, ".");
+											strcat(name, file_dir->fext);
+										}
+										// 将文件名添加到buf里
+										filler(buf, name, NULL, 0, 0);
+										// 如果找到了所有的file dir, 结束
+										if (cur_num == fd_num)
+											goto error;
+									}
+								}
 							}
 						}
 					}
