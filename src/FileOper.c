@@ -1464,6 +1464,39 @@ int initFileDir(struct GFileDir *file_dir)
 	return ret;
 }
 
+// 根据inode id 遍历所有的file_dir, 并加进buf中
+int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t filler)
+{
+	int ret = 0;
+	struct GInode *inode = (struct GInode *)malloc(sizeof(struct GInode));
+	// 根据inode_id, 读出数据内容
+	if (getInodeByInodeId(inode_id, inode) != 0)
+	{
+		printError("GFS_readdir: getInodeByInodeId failed!");
+		ret = -ENOENT;
+		goto error;
+	}
+	// 按顺序查找,并向buf添加目录内的文件和目录名
+	int pos = 0;
+	char name[MAX_FILENAME + MAX_EXTENSION + 2]; // 2是因为文件名和扩展名都有nul字符
+	while (pos < data_blk->size)
+	{
+		strcpy(name, file_dir->fname);
+		if (strlen(file_dir->fext) != 0)
+		{
+			strcat(name, ".");
+			strcat(name, file_dir->fext);
+		}
+		if (file_dir->flag != 0 && name[strlen(name) - 1] != '~' && filler(buf, name, NULL, 0, 0)) // 将文件名添加到buf里面
+			break;
+		file_dir++;
+		pos += sizeof(struct file_directory);
+	}
+
+error:
+	free(inode);
+	return ret;
+}
 // 根据路径新建文件
 int createFileByPath(const char *path, enum GTYPE file_type)
 {

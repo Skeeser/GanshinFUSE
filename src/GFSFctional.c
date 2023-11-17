@@ -182,9 +182,7 @@ int GFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	(void)fi;
 	(void)flags;
 	int ret = 0;
-	// struct GDataBlock *data_blk = (struct GDataBlock *)malloc(sizeof(struct GDataBlock));
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
-	struct GInode *inode = (struct GInode *)malloc(sizeof(struct GInode));
 
 	if (getFileDirByPath(path, file_dir) == -1) // 打开path指定的文件，将文件属性读到attr中
 	{
@@ -202,38 +200,20 @@ int GFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	}
 
 	const long inode_id = file_dir->nInodeBlock;
-	// 根据inode_id, 读出数据内容
-	if (getInodeByInodeId(inode_id, inode) != 0)
-	{
-		printError("GFS_readdir: getInodeByInodeId failed!");
-		ret = -ENOENT;
-		goto error;
-	}
 
 	// 先用filler函数添加 . 和 ..
 	filler(buf, ".", NULL, 0, 0);
 	filler(buf, "..", NULL, 0, 0);
 
-	// 按顺序查找,并向buf添加目录内的文件和目录名
-	int pos = 0;
-	char name[MAX_FILENAME + MAX_EXTENSION + 2]; // 2是因为文件名和扩展名都有nul字符
-	while (pos < data_blk->size)
+	// 遍历所有的file dir并加进buf中
+	if ((ret = iterFileDirByInodeId(inode_id, buf, filler)) != 0)
 	{
-		strcpy(name, file_dir->fname);
-		if (strlen(file_dir->fext) != 0)
-		{
-			strcat(name, ".");
-			strcat(name, file_dir->fext);
-		}
-		if (file_dir->flag != 0 && name[strlen(name) - 1] != '~' && filler(buf, name, NULL, 0, 0)) // 将文件名添加到buf里面
-			break;
-		file_dir++;
-		pos += sizeof(struct file_directory);
+		printError("GFS_readdir: iterFileDir failed1");
+		ret = -ENOENT;
+		goto error;
 	}
 
 error:
 	free(file_dir);
-	// free(data_blk);
-	free(inode);
 	return ret;
 }

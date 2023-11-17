@@ -56,6 +56,7 @@ void getFileDirFromDataBlk(const struct GDataBlock *data_blk, const int offset, 
 int writeFileDirToDataBlk(const struct GFileDir *p_fd, const int offset, struct GDataBlock *data_blk);
 int removeFileDirFromDataBlk(const int offset, struct GDataBlock *data_blk);
 int initFileDir(struct GFileDir *file_dir);
+int iterFileDirByInodeId(const short int inode_id, void *buf, fuse_fill_dir_t filler);
 
 // File
 void getFileBlkNum(struct GInode *inode, int *blk_num);
