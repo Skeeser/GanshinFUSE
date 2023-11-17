@@ -32,7 +32,7 @@ int GFS_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 	{
 		free(file_inode);
 		printError("GFS_getattr: error!");
-		return -1;
+		return -ENOENT;
 	}
 	getInodeByInodeId(inode_id, file_inode);
 	// 根据inode赋值给stbuf

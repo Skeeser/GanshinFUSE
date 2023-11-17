@@ -19,7 +19,7 @@ TEST(GFS, getattr)
     int ret = GFS_getattr("/", st, (struct fuse_file_info *)NULL);
     ASSERT_EQ(ret, 0);
     ASSERT_EQ(st->st_nlink, 1);
-    ASSERT_EQ(st->st_mode, 0755);
+    ASSERT_EQ(st->st_mode, __S_IFDIR | 0755);
     free(st);
 }
 

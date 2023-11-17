@@ -170,12 +170,12 @@ static void initInode(FILE *const fp)
     struct GInode *const root = malloc(sizeof(struct GInode));
     struct GDataBlock *const data_blk = malloc(sizeof(struct GDataBlock));
     // 为根目录的 struct GInode 对象赋值
-    root->st_mode = 0755; // 权限，例如 rwxr-xr-x
-    root->st_ino = 0;     // i-node号为0
-    root->st_nlink = 1;   // 连接数，通常为1
-    root->st_uid = 0;     // 根目录的用户 ID，通常为0（超级用户）
-    root->st_gid = 0;     // 根目录的组 ID，通常为0（超级用户组）
-    root->st_size = 0;    // 文件大小
+    root->st_mode = __S_IFDIR | 0755; // 权限，例如 rwxr-xr-x
+    root->st_ino = 0;                 // i-node号为0
+    root->st_nlink = 1;               // 连接数，通常为1
+    root->st_uid = 0;                 // 根目录的用户 ID，通常为0（超级用户）
+    root->st_gid = 0;                 // 根目录的组 ID，通常为0（超级用户组）
+    root->st_size = 0;                // 文件大小
     time_t currentTime;
     currentTime = time(NULL); // 获取当前时间
 
