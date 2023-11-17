@@ -81,7 +81,6 @@ static int hello_getattr(const char *path, struct stat *stbuf,
 	}
 	else
 		res = -ENOENT;
-
 	return res;
 }
 

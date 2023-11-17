@@ -2605,6 +2605,8 @@ int removeFileByHash(const int hash_num, const int menu_cur_i)
 		if (second_data_blk->size <= 0)
 		{
 			first_data_blk->size -= sizeof(short int);
+			// 将对应位置写上-1
+			writeShortIntToData(first_data_blk->data, );
 			writeDataByBlkId(*first_addr, first_data_blk);
 			unsetBitmapUsed(start_databitmap_blk, second_addr, 1);
 		}
