@@ -21,7 +21,6 @@
 
 [简体中文](README_ZH.md) | [English](README_EN.md)
 
-OS File System Based on libfuse.  
 A class UFS file system based on libfuse.  
 If you find it helpful, please give it a star :wink:​  
 
