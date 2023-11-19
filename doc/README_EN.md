@@ -147,7 +147,7 @@ cd build/
 You will see the logo of this project
 
 <div align="left" >
-<img alt="logo2" src="assets/logo2.png" />
+<img alt="logo2" src="https://github.com/Skeeser/GanshinFUSE/blob/main/assets/logo.png" />
 </div>
 
 <br>

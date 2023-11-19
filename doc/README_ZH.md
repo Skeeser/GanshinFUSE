@@ -25,11 +25,6 @@ OS File System Based on libfuse.
 基于libfuse实现的类UFS文件系统  
 如果觉得不错的话, 麻烦点个star吧 :wink:​  
 
-
-<br>
-
-~~**要是 SCUTer 看见了, 都是一个班, 抄了很容易被老师认为抄袭哦**~~
-
 <br>
 
 </div>
@@ -151,7 +146,7 @@ cd build/
 能够看到本项目的logo
 
 <div align="left" >
-<img alt="logo2" src="assets/logo2.png" />
+<img alt="logo2" src="https://github.com/Skeeser/GanshinFUSE/blob/main/assets/logo.png" />
 </div>
 
 <br>
