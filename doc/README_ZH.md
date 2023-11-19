@@ -116,6 +116,8 @@ option(USE_DEBUG "Build with debug flags" ON)
 ```
 debug版本--ON  
 release版本--OFF  
+特别说明: 如果设置了release版本就不会编译gtest代码了  
+如果需要安装gtest，可以见[开发文档](doc/develop_log.md)  
 
 <br>
 

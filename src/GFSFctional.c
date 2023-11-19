@@ -139,11 +139,6 @@ int GFS_write(const char *path, const char *buf, size_t size, off_t offset, stru
 
 	const long file_inode_id = file_dir->nInodeBlock;
 
-	// 处理末尾的'\n'
-
-	// if (tmp_buf[size - 1] == '\n')
-	// 	tmp_buf[size - 1] = '\0';
-
 	// 根据inode_id来写入文件
 	// 根据文件信息读取文件内容
 	if ((writeFileDataByInodeId(file_inode_id, size, offset, tmp_buf)) != 0)
@@ -189,7 +184,7 @@ int GFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	int ret = 0;
 	struct GFileDir *file_dir = (struct GFileDir *)malloc(sizeof(struct GFileDir));
 
-	if (getFileDirByPath(path, file_dir) == -1) // 打开path指定的文件，将文件属性读到attr中
+	if (getFileDirByPath(path, file_dir) == -1) // 打开path指定的文件，将文件属性读到file_dir中
 	{
 		printError("GFS_readdir: get file_dir failed!");
 		ret = -ENOENT;

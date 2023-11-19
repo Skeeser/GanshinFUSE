@@ -5,13 +5,13 @@ extern "C"
 }
 #include "gtest/gtest.h"
 
-// 初始化测试
+// 初始化测试功能
 TEST(GFS, init)
 {
     void *ret = GFS_init((fuse_conn_info *)NULL, (fuse_config *)NULL);
     ASSERT_EQ(NULL, ret);
 }
-
+// 测试读取文件和目录信息功能
 TEST(GFS, getattr)
 {
     struct stat *st = (struct stat *)malloc(sizeof(struct stat));
@@ -22,7 +22,6 @@ TEST(GFS, getattr)
     ASSERT_EQ(st->st_mode, __S_IFDIR | 0755);
     free(st);
 }
-
 // 测试分离文件名函数
 TEST(FILE, divideFile)
 {
@@ -47,7 +46,7 @@ TEST(FILE, divideFile)
     free(remain_path);
     free(fall_name);
 }
-
+// 测试新建文件函数
 TEST(FILE, createFile)
 {
     int ret = createFileByPath("/test.jpg", GFILE);
@@ -59,7 +58,7 @@ TEST(FILE, createFile)
     // ASSERT_EQ(fd->fsize, 0);
     free(fd);
 }
-
+// 测试读写文件函数
 TEST(FILE, writeAndread)
 {
     char *data = (char *)malloc(MAX_DATA_IN_BLOCK);
@@ -71,7 +70,7 @@ TEST(FILE, writeAndread)
     read_int = retShortIntFromData(data, 5);
     ASSERT_EQ(read_int, 98);
 }
-
+// 测试删除文件函数
 TEST(FILE, removeFile)
 {
     int ret = removeFileByPath("/test.jpg", GFILE);
@@ -81,7 +80,7 @@ TEST(FILE, removeFile)
     ret = getFileDirByPath("/test.jpg", fd);
     ASSERT_EQ(ret, -1);
 }
-
+// 测试GFS的写文件功能
 TEST(GFS, writeFile)
 {
     int ret = removeFileByPath("/hello.txt", GFILE);
@@ -97,7 +96,7 @@ TEST(GFS, writeFile)
     ret = GFS_write("/hello.txt", test_data, strlen(test_data) + 1, 0, (struct fuse_file_info *)NULL);
     ASSERT_EQ(ret, 0);
 }
-
+// 测试读文件功能
 TEST(GFS, readFile)
 {
     const char *test_data = "Hello, GanshinFuse!";
@@ -108,7 +107,7 @@ TEST(GFS, readFile)
     ASSERT_STRCASEEQ(read_data, test_data);
     free(read_data);
 }
-
+// 测试创建目录功能
 TEST(GFS, createDir)
 {
     int ret = GFS_mkdir("/test_dir/", (mode_t)NULL);
@@ -120,7 +119,7 @@ TEST(GFS, createDir)
     // ASSERT_EQ(fd->fsize, 0);
     free(fd);
 }
-
+// 测试删除目录功能
 TEST(GFS, removeDir)
 {
     int ret = GFS_rmdir("/test_dir/");
