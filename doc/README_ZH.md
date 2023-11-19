@@ -19,7 +19,7 @@
 </div>
 <br>
 
-[简体中文](README_ZH.md) | [English](README_EN.md)
+[简体中文](doc/README_ZH.md) | [English](doc/README_EN.md)
 
 OS File System Based on libfuse.  
 基于libfuse实现的类UFS文件系统  

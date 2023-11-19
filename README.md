@@ -19,7 +19,7 @@
 </div>
 <br>
 
-[简体中文](README_ZH.md) | [English](README_EN.md)
+[简体中文](doc/README_ZH.md) | [English](doc/README_EN.md)
 
 A class UFS file system based on libfuse.  
 If you find it helpful, please give it a star :wink:​  

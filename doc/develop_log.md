@@ -2,25 +2,6 @@
 
 <br>
 
-## 开发计划(ToDos)
-- [x] 了解fuse怎么使用  
-- [x] 运行hello world例子
-- [x] 尝试读懂hello.c的源码
-- [x] 写CMakeList.txt
-- [x] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
-- [x] 实现格式化程序(GanshinInit)
-- [ ] 文件系统实现(GanshinFS)
-- [x] GFS_init初始化
-- [x] GFS_getattr获取文件属性
-- [x] GFS_mknod创建文件
-- [ ] 优化disk的地址逻辑, 弄成不用手动设置
-- [ ] 将所有的步骤写成脚本
-- [ ] 解决哈希冲突
-- [ ] 支持文件和文件夹同名
-- [ ] 优化函数参数名
-
-<br>
-
 ## fuse框架的使用
 ### hello world例子
 挂载文件系统并查看
@@ -234,16 +215,16 @@ i节点, 根目录指向data区的一个块地址
 
 <br>
 
-## 常见问题
+## 常见问题  
 Q: 为什么我设了断点没用  
 A: 因为编译出来的不是debug版本, 更改cmakelist.txt  
----
+---  
 Q: str的memcpy, 字符串不对?  
 A: 注意len()要加一, 把'\0'也复制   
---- 
+---   
 Q: 挂载后出现"由软件导致的连接断开"  
 A: 试着不要在sudo环境下运行
----
+---  
 Q: 出现" 输入/输出错误"  
 A: inode中的st_mode不对  
 
@@ -257,11 +238,27 @@ A: inode中的st_mode不对
 
 
 ## 进度
-该addr的时候把目录的addr也给改了, 出问题  
-一个inode就占了一个块了,太过于浪费, 重构代码  
-bitmap初始化问题  
-写一个判断该块是否free的函数  
-根目录的st_size不太对  
-removeFileByPath把超级块给弄成0了
-写入文件或者读取不全  
-writeFileDataByInodeId按照size来遍历, 但是之前已经初始化为零了, 不会写不进去吗?  
+## 开发计划(ToDos)
+- [x] 了解fuse怎么使用  
+- [x] 运行hello world例子
+- [x] 尝试读懂hello.c的源码
+- [x] 写CMakeList.txt
+- [x] 根据hello.c的源码, 试着写一下GanshinFUSE的类似代码
+- [x] 实现格式化程序(GanshinInit)
+- [x] 文件系统实现(GanshinFS)
+- [x] GFS_init初始化
+- [x] GFS_getattr获取文件属性
+- [x] GFS_mknod创建文件
+- [x] 该addr的时候把目录的addr也给改了, 出问题  
+- [x] 一个inode就占了一个块了,太过于浪费, 重构代码  
+- [x] bitmap初始化问题  
+- [x] 写一个判断该块是否free的函数  
+- [x] 根目录的st_size不太对  
+- [x] removeFileByPath把超级块给弄成0了
+- [x] 写入文件或者读取不全  
+- [x] writeFileDataByInodeId按照size来遍历, 但是之前已经初始化为零了, 不会写不进去吗?  
+- [ ] 优化disk的地址逻辑, 弄成不用手动设置
+- [ ] 将所有的步骤写成脚本
+- [ ] 解决哈希冲突
+- [ ] 支持文件和文件夹同名
+- [ ] 优化函数参数名
