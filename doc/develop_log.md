@@ -177,7 +177,8 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 <br>
 
 ### 将文件系统的相关信息写入超级块
-这部分根据之前设置的文件系统相关设置进行计算初始化
+这部分根据之前设置的文件系统相关设置进行计算初始化  
+从0开始, 数据块的开始块 = 超级块数 + InodeBitMap块数 + DataBitMap块数 + Inode块数  
 
 <br>
 
@@ -185,11 +186,12 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 #### 需要把InodeBitmap的初始化的对应块
 1. 根目录
 
-需要把第一个Byte的第一个bit置1
+需要把第一个Byte的第一个bit置1  
+Inode的bitmap的一个Byte对应一个块  
 
 <br>
 
-#### 需要把Bitmap的初始化的对应块
+#### 需要把DataBitmap的初始化的对应块
 1. SuperBlock
 2. InodeBitmap
 3. DataBitmap
@@ -197,6 +199,15 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 
 <br>
 
+#### 初始化过程  
+初始化的过程如下（和初始化InodeBitmap同）：  
+- 首先，通过一些预定义的常量计算了位图应占用的字节数。然后按字节将部分初始化为全1，表示这些块已被占用。  
+- 接着，在最后一个字节中，使用循环设置了部分位为1，表示剩余的一些块也被占用。  
+- 最后，将位图的剩余部分清零，确保文件系统中未分配的块被标记为未使用状态。   
+
+
+
+<br>
 
 ### 初始化Inode
 #### 将根目录的相关信息填写到inode区的第一个inode。
@@ -212,7 +223,8 @@ i节点, 根目录指向data区的一个块地址
 <br>
 
 ### 获取文件属性GFS_getattr
-要利用到Config.h定义的GFileData数据结构
+要利用到Config.h定义的GInode数据结构   
+先根据路径获取对应文件的inode，然后再将inode赋值给stbuf  
 
 <br>
 

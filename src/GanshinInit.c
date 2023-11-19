@@ -24,11 +24,11 @@ static void initSuperBlock(FILE *const fp)
     // 动态内存分配，申请super_blk
     struct GSuperBlock *const super_blk = malloc(sizeof(struct GSuperBlock));
     super_blk->fs_size = TOTAL_BLOCK_NUM;
-    // 从0开始, 超级块数 + InodeBitMap块数 + DataBitMap块数 + Inode块数
+    // 从0开始, 数据块的开始块 = 超级块数 + InodeBitMap块数 + DataBitMap块数 + Inode块数
     super_blk->first_blk = SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP + INODE_BLOCK;
     super_blk->datasize = DATA_BITMAP * FS_BLOCK_SIZE * 8;
     // first_inode的定义为inode_id, 而不是原来的块号
-    super_blk->first_inode = 0; // SUPER_BLOCK + INODE_BITMAP + DATA_BITMAP;
+    super_blk->first_inode = 0;
     super_blk->inode_area_size = INODE_BLOCK;
     super_blk->first_blk_of_inodebitmap = SUPER_BLOCK;
     super_blk->inodebitmap_size = INODE_BITMAP;
@@ -178,7 +178,6 @@ static void initInode(FILE *const fp)
     root->st_size = 0;                // 文件大小
     time_t currentTime;
     currentTime = time(NULL); // 获取当前时间
-
     if (currentTime == (time_t)-1)
     {
         printError("Inode get time failed!");
