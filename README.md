@@ -21,9 +21,9 @@
 
 [简体中文](doc/README_ZH.md) | [English](doc/README_EN.md)
 
-A class UFS file system based on libfuse.  
-If you find it helpful, please give it a star :wink:​  
-
+OS File System Based on libfuse.  
+基于libfuse实现的类UFS文件系统  
+If you find it helpful, please consider giving it a star :wink:​  
 
 <br>
 
@@ -32,30 +32,31 @@ If you find it helpful, please give it a star :wink:​
 <br>
 
 ## Features
-- Created a UFS-like file system using the libfuse framework, managing the file system using inodes
-- Manage free blocks and free inodes using bitmaps, file data blocks using direct and indirect indexing, and support multi-level directories.
-- File and directory addition, deletion, modification, and search all utilize hash tables for higher efficiency compared to conventional sequential storage
-- Code style mimics C++ exception mechanisms, making error traceback easy
-- Used shell scripts to install dependencies, one command for easy installation of dependencies, farewell to complex environment configurations
-- Wrote CMakeList.txt, built with cmake to generate makefiles, simple and efficient, strong cross-platform compatibility
-- Utilized gtest framework for unit testing, resulting in stronger code robustness and reliable functionality
-
+- Utilizes the libfuse framework to create a UFS-like file system, managing the file system using inodes.
+- Manages free blocks and free inodes using bitmaps, employs direct and indirect indexing for file data blocks, supports multi-level directories.
+- Reduces file I/O operations intentionally, caching in memory and writing changes to files only at the end, making file operations quicker and more efficient.
+- Uses hash tables for file and directory operations, providing higher efficiency compared to conventional sequential storage.
+- Clear and uniform function and variable names, aiming for code clarity even without extensive comments; the function names, purpose, and return values are standardized with default 0 return for success. Examples can be found in (FileOper.h).
+- Code style mimics C++ exception handling, facilitating error traceback. Strict memory management is enforced to prevent memory leaks.
+- Utilizes shell scripts for dependency installation, enabling easy installation with a single command, eliminating complex environment setups.
+- Includes CMakeList.txt for generating makefiles using cmake, offering simplicity, efficiency, and strong cross-platform capabilities.
+- Employs the gtest framework for unit testing, enhancing code robustness and reliability.
 <br>
 
 ## File Structure
 
-- doc => Stores development documents
-  - develop_log.md => Development log
-- include => Header files
-- src => Source code
-- assets => Resource files
-- build => Compiled files
-- example => Stores example files
-- out => Stores disk files
-- test => Test code
+- doc => stores development documents
+  - develop_log.md => development log
+- include => header files
+- src => source code
+- assets => resource files
+- build => compiled files
+- example => example files
+- out => stores disk files
+- test => test code
 - CMakeLists.txt => CMake configuration file
-- build.sh => Build script
-- README.md => Documentation  
+- build.sh => build script
+- README.md => documentation  
 
 <br>
 
@@ -70,7 +71,7 @@ Linux
 - cmake
 - gcc
 - libfuse
-- gtest (for development testing)
+- gtest (for unit testing)
 - lldb (for debugging)
 
 <br>
@@ -92,7 +93,7 @@ sudo chmod +x ~/GanshinFUSE/build.sh && ~/GanshinFUSE/build.sh
 <br>
 
 ### Create disk file
-8MB size
+8MB in size
 ```shell
 dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 ```
@@ -100,11 +101,11 @@ dd bs=1M count=8 if=/dev/zero of=~/GanshinFUSE/out/diskimg
 <br>
 
 ### Set disk address
-Need to modify `~/GanshinFUSE/include/config.h`:
+Modify `~/GanshinFUSE/include/config.h`:
 ```c
 #define DISK_PATH "/home/keeser/GanshinFUSE/out/diskimg"
 ```
-Set the absolute path to your disk
+Set the absolute path for your disk
 
 <br>
 
@@ -114,12 +115,13 @@ Modify CMakeList.txt:
 ```c
 option(USE_DEBUG "Build with debug flags" ON)
 ```
-Debug version--ON  
-Release version--OFF  
+debug version--ON  
+release version--OFF  
+Note: Setting release version won't compile gtest code. If gtest installation is needed, refer to [development document](doc/develop_log.md)  
 
 <br>
 
-### Perform compilation
+### Execute compilation
 ```shell
 cd ~/GanshinFUSE/
 mkdir build
@@ -130,7 +132,7 @@ make
 
 <br>
 
-## Run
+## Execution
 ### In the build folder
 ```shell
 cd build/
@@ -143,7 +145,7 @@ cd build/
 ./GanshinInit
 ```
 
-You will see the logo of this project
+You should see the logo of this project
 
 <div align="left" >
 <img alt="logo2" src="https://github.com/Skeeser/GanshinFUSE/blob/main/assets/logo.png" />
@@ -151,9 +153,9 @@ You will see the logo of this project
 
 <br>
 
-### Create a new mounting folder
-Create a folder to mount the file system, any folder in any location will do  
-Here, create the folder inside the build folder  
+### Create a mount directory
+Create a folder to mount the file system, can be any location
+Here, create the folder inside the build folder
 ```shell
 cd build/
 mkdir mountdir
@@ -162,9 +164,9 @@ mkdir mountdir
 <br>
 
 ### Mount the file system
-GanshinFS start  
+Start GanshinFS
 ```shell
-# File system running in the background by default
+# File system runs in the background by default
 ./GanshinFS ./mountdir
 
 # Force the file system to run in the foreground
@@ -178,33 +180,34 @@ GanshinFS start
 
 ### Unmount the file system
 ```shell
-fusermount -u testmount
+fusermount -u mountdir
 ```
 
 <br>
 
 ### Run tests
 ```shell
-./GanhsinTest
+./GanshinTest
 ```
 
 <br>
 
 ## Debugging Tools
 LLDB
-For detailed usage, see [Development Document](doc/develop_log.md)
+For detailed usage, refer to [development document](doc/develop_log.md)
 
 <br>
 
 ## User Guide
-- Check if the dependencies are installed
+- Ensure all dependencies are installed
 
 <br>
 
 ## How to Contribute
-If you've come across this project and want to improve it, strongly recommend reading the documents below:
+If you come across this project and want to improve it
+Strongly suggest reading the following documents
 
-- [How to participate in open source projects on Github](doc/github参与开源项目流程.md)
+- [How to Participate in Open Source Projects on Github](doc/github参与开源项目流程.md)
 - [Development Document](doc/develop_log.md)
 
 <br>
@@ -220,10 +223,10 @@ keeser
 - [x] Understand the development plan first
 - [x] Develop GanshinInit
 - [x] Develop GanshinFS
-- [x] See if unit testing can be done
-- [ ] Try to combine the written GanshinFuse with buildroot to burn it on an embedded board
-- [ ] After testing, organize the open source repository
-- [ ] Write the experiment report
+- [x] See if single unit tests can be done
+- [ ] Try integrating the written GanshinFuse with buildroot to burn it on an embedded board
+- [x] Organize the open source repository after passing the test
+- [x] Write experimental report
 
 <br>
 
